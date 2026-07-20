@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>De Alleseter</title>
+    <link rel="stylesheet" href="css/style.css?v=26">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header id="top-bar">
+        <div class="top-left">
+        <div class="logo" id="logo">De Alleseter</div>
+        <div class="toolbar toolbar-left">
+            <button id="btn-undo" class="tool-btn" title="Undo">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-redo" class="tool-btn" title="Redo">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z" fill="currentColor"/></svg>
+            </button>
+            <div class="separator"></div>
+            <button id="btn-pencil" class="tool-btn active" title="Draw">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-eraser" class="tool-btn" title="Erase">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.01 4.01 0 01-5.66 0L2.81 17c-.78-.78-.78-2.05 0-2.83l10.6-10.61a2.01 2.01 0 012.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-fill" class="tool-btn" title="Fill">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 000 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z" fill="currentColor"/></svg>
+            </button>
+            <div class="separator"></div>
+            <div class="brush-size-control">
+                <label>Size / Formaat</label>
+                <input type="range" id="brush-size" min="6" max="10" value="6" step="1">
+                <span id="brush-size-label">3</span>
+            </div>
+        </div>
+        </div>
+
+        <div class="action-group">
+            <button id="btn-restart" class="restart-btn" title="Restart / Opnieuw beginnen">Restart / Opnieuw beginnen</button>
+            <button id="btn-send" class="send-btn" title="Send / Versturen">Send / Versturen</button>
+        </div>
+
+        <div class="toolbar toolbar-right" id="extras-toolbar" hidden>
+            <button id="btn-save" class="tool-btn" title="Save">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-open" class="tool-btn" title="Open">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm0 12H4V8h16v10z" fill="currentColor"/></svg>
+            </button>
+            <button id="btn-export" class="tool-btn export-btn" title="Export OBJ">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg>
+                <span class="btn-label">OBJ</span>
+            </button>
+            <button id="btn-settings" class="tool-btn" title="Upload Settings">
+                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z" fill="currentColor"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Layer Sidebar -->
+        <aside id="layer-panel">
+            <div class="panel-header">Layers / Lagen</div>
+            <div id="layer-list"></div>
+            <button id="btn-add-layer" class="add-layer-btn" title="Add Layer" style="display:none">+</button>
+        </aside>
+
+        <!-- Drawing Area -->
+        <div id="canvas-container">
+            <canvas id="draw-canvas"></canvas>
+        </div>
+
+        <!-- 3D Preview -->
+        <div id="preview-3d">
+            <div class="preview-header">3D</div>
+            <canvas id="preview-canvas"></canvas>
+        </div>
+    </main>
+
+    <!-- Color Palette -->
+    <footer id="color-palette"></footer>
+
+    <!-- Restart Confirm Popup -->
+    <div id="restart-overlay" class="overlay" hidden>
+        <div class="modal">
+            <h3>Start over? / Opnieuw beginnen?</h3>
+            <p class="modal-hint">This will erase everything. / Dit wist alles.</p>
+            <div class="modal-actions">
+                <button id="restart-cancel" class="btn-secondary">No / Nee</button>
+                <button id="restart-confirm" class="btn-primary">Yes / Ja</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Popup -->
+    <div id="send-overlay" class="overlay" hidden>
+        <div class="modal">
+            <h3>Your Name / Je Naam</h3>
+            <input id="send-name" type="text" placeholder="..." autocomplete="off">
+            <div class="modal-actions">
+                <button id="send-cancel" class="btn-secondary">Cancel / Annuleer</button>
+                <button id="send-confirm" class="btn-primary">Send / Versturen</button>
+            </div>
+            <p id="send-status" class="modal-status"></p>
+        </div>
+    </div>
+
+    <!-- Settings Panel (hidden by default; revealed via secret tap) -->
+    <div id="settings-overlay" class="overlay" hidden>
+        <div class="modal">
+            <h3>Export Settings</h3>
+            <label>Upload Server URL</label>
+            <input id="upload-url" type="text" placeholder="http://192.168.1.100:8080">
+            <div class="row">
+                <button id="settings-test" class="btn-secondary">Test Connection</button>
+                <span id="settings-test-result" class="modal-status"></span>
+            </div>
+            <p class="modal-hint">Run <b>upload-server.py</b> on the target PC, then enter its address here. Leave empty to just download files.</p>
+            <div class="modal-actions">
+                <button id="settings-cancel" class="btn-secondary">Cancel</button>
+                <button id="settings-save" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-input" accept=".vormjr" style="display:none">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Inline Web Worker for mesh generation (works with file:// and http://) -->
+    <script id="mesh-worker-src" type="text/worker">
+    // SDF-based mesh worker — no blur, no laplacian needed
+    // STEP=3 gives ~45% fewer polygons than STEP=2 while Laplacian smoothing
+    // keeps the surface looking high-res. Cheaper OBJ exports + smoother iPad.
+    const STEP=3,LT=2,LG=3,PAD=2;
+    const ET=new Uint16Array([0x0,0x109,0x203,0x30a,0x406,0x50f,0x605,0x70c,0x80c,0x905,0xa0f,0xb06,0xc0a,0xd03,0xe09,0xf00,0x190,0x99,0x393,0x29a,0x596,0x49f,0x795,0x69c,0x99c,0x895,0xb9f,0xa96,0xd9a,0xc93,0xf99,0xe90,0x230,0x339,0x33,0x13a,0x636,0x73f,0x435,0x53c,0xa3c,0xb35,0x83f,0x936,0xe3a,0xf33,0xc39,0xd30,0x3a0,0x2a9,0x1a3,0xaa,0x7a6,0x6af,0x5a5,0x4ac,0xbac,0xaa5,0x9af,0x8a6,0xfaa,0xea3,0xda9,0xca0,0x460,0x569,0x663,0x76a,0x66,0x16f,0x265,0x36c,0xc6c,0xd65,0xe6f,0xf66,0x86a,0x963,0xa69,0xb60,0x5f0,0x4f9,0x7f3,0x6fa,0x1f6,0xff,0x3f5,0x2fc,0xdfc,0xcf5,0xfff,0xef6,0x9fa,0x8f3,0xbf9,0xaf0,0x650,0x759,0x453,0x55a,0x256,0x35f,0x55,0x15c,0xe5c,0xf55,0xc5f,0xd56,0xa5a,0xb53,0x859,0x950,0x7c0,0x6c9,0x5c3,0x4ca,0x3c6,0x2cf,0x1c5,0xcc,0xfcc,0xec5,0xdcf,0xcc6,0xbca,0xac3,0x9c9,0x8c0,0x8c0,0x9c9,0xac3,0xbca,0xcc6,0xdcf,0xec5,0xfcc,0xcc,0x1c5,0x2cf,0x3c6,0x4ca,0x5c3,0x6c9,0x7c0,0x950,0x859,0xb53,0xa5a,0xd56,0xc5f,0xf55,0xe5c,0x15c,0x55,0x35f,0x256,0x55a,0x453,0x759,0x650,0xaf0,0xbf9,0x8f3,0x9fa,0xef6,0xfff,0xcf5,0xdfc,0x2fc,0x3f5,0xff,0x1f6,0x6fa,0x7f3,0x4f9,0x5f0,0xb60,0xa69,0x963,0x86a,0xf66,0xe6f,0xd65,0xc6c,0x36c,0x265,0x16f,0x66,0x76a,0x663,0x569,0x460,0xca0,0xda9,0xea3,0xfaa,0x8a6,0x9af,0xaa5,0xbac,0x4ac,0x5a5,0x6af,0x7a6,0xaa,0x1a3,0x2a9,0x3a0,0xd30,0xc39,0xf33,0xe3a,0x936,0x83f,0xb35,0xa3c,0x53c,0x435,0x73f,0x636,0x13a,0x33,0x339,0x230,0xe90,0xf99,0xc93,0xd9a,0xa96,0xb9f,0x895,0x99c,0x69c,0x795,0x49f,0x596,0x29a,0x393,0x99,0x190,0xf00,0xe09,0xd03,0xc0a,0xb06,0xa0f,0x905,0x80c,0x70c,0x605,0x50f,0x406,0x30a,0x203,0x109,0x0]);
+    const TT=[[-1],[0,8,3,-1],[0,1,9,-1],[1,8,3,9,8,1,-1],[1,2,10,-1],[0,8,3,1,2,10,-1],[9,2,10,0,2,9,-1],[2,8,3,2,10,8,10,9,8,-1],[3,11,2,-1],[0,11,2,8,11,0,-1],[1,9,0,2,3,11,-1],[1,11,2,1,9,11,9,8,11,-1],[3,10,1,11,10,3,-1],[0,10,1,0,8,10,8,11,10,-1],[3,9,0,3,11,9,11,10,9,-1],[9,8,10,10,8,11,-1],[4,7,8,-1],[4,3,0,7,3,4,-1],[0,1,9,8,4,7,-1],[4,1,9,4,7,1,7,3,1,-1],[1,2,10,8,4,7,-1],[3,4,7,3,0,4,1,2,10,-1],[9,2,10,9,0,2,8,4,7,-1],[2,10,9,2,9,7,2,7,3,7,9,4,-1],[8,4,7,3,11,2,-1],[11,4,7,11,2,4,2,0,4,-1],[9,0,1,8,4,7,2,3,11,-1],[4,7,11,9,4,11,9,11,2,9,2,1,-1],[3,10,1,3,11,10,7,8,4,-1],[1,11,10,1,4,11,1,0,4,7,11,4,-1],[4,7,8,9,0,11,9,11,10,11,0,3,-1],[4,7,11,4,11,9,9,11,10,-1],[9,5,4,-1],[9,5,4,0,8,3,-1],[0,5,4,1,5,0,-1],[8,5,4,8,3,5,3,1,5,-1],[1,2,10,9,5,4,-1],[3,0,8,1,2,10,4,9,5,-1],[5,2,10,5,4,2,4,0,2,-1],[2,10,5,3,2,5,3,5,4,3,4,8,-1],[9,5,4,2,3,11,-1],[0,11,2,0,8,11,4,9,5,-1],[0,5,4,0,1,5,2,3,11,-1],[2,1,5,2,5,8,2,8,11,4,8,5,-1],[10,3,11,10,1,3,9,5,4,-1],[4,9,5,0,8,1,8,10,1,8,11,10,-1],[5,4,0,5,0,11,5,11,10,11,0,3,-1],[5,4,8,5,8,10,10,8,11,-1],[9,7,8,5,7,9,-1],[9,3,0,9,5,3,5,7,3,-1],[0,7,8,0,1,7,1,5,7,-1],[1,5,3,3,5,7,-1],[9,7,8,9,5,7,10,1,2,-1],[10,1,2,9,5,0,5,3,0,5,7,3,-1],[8,0,2,8,2,5,8,5,7,10,5,2,-1],[2,10,5,2,5,3,3,5,7,-1],[7,9,5,7,8,9,3,11,2,-1],[9,5,7,9,7,2,9,2,0,2,7,11,-1],[2,3,11,0,1,8,1,7,8,1,5,7,-1],[11,2,1,11,1,7,7,1,5,-1],[9,5,8,8,5,7,10,1,3,10,3,11,-1],[5,7,0,5,0,9,7,11,0,1,0,10,11,10,0,-1],[11,10,0,11,0,3,10,5,0,8,0,7,5,7,0,-1],[11,10,5,7,11,5,-1],[10,6,5,-1],[0,8,3,5,10,6,-1],[9,0,1,5,10,6,-1],[1,8,3,1,9,8,5,10,6,-1],[1,6,5,2,6,1,-1],[1,6,5,1,2,6,3,0,8,-1],[9,6,5,9,0,6,0,2,6,-1],[5,9,8,5,8,2,5,2,6,3,2,8,-1],[2,3,11,10,6,5,-1],[11,0,8,11,2,0,10,6,5,-1],[0,1,9,2,3,11,5,10,6,-1],[5,10,6,1,9,2,9,11,2,9,8,11,-1],[6,3,11,6,5,3,5,1,3,-1],[0,8,11,0,11,5,0,5,1,5,11,6,-1],[3,11,6,0,3,6,0,6,5,0,5,9,-1],[6,5,9,6,9,11,11,9,8,-1],[5,10,6,4,7,8,-1],[4,3,0,4,7,3,6,5,10,-1],[1,9,0,5,10,6,8,4,7,-1],[10,6,5,1,9,7,1,7,3,7,9,4,-1],[6,1,2,6,5,1,4,7,8,-1],[1,2,5,5,2,6,3,0,4,3,4,7,-1],[8,4,7,9,0,5,0,6,5,0,2,6,-1],[7,3,9,7,9,4,3,2,9,5,9,6,2,6,9,-1],[3,11,2,7,8,4,10,6,5,-1],[5,10,6,4,7,2,4,2,0,2,7,11,-1],[0,1,9,4,7,8,2,3,11,5,10,6,-1],[9,2,1,9,11,2,9,4,11,7,11,4,5,10,6,-1],[8,4,7,3,11,5,3,5,1,5,11,6,-1],[5,1,11,5,11,6,1,0,11,7,11,4,0,4,11,-1],[0,5,9,0,6,5,0,3,6,11,6,3,8,4,7,-1],[6,5,9,6,9,11,4,7,9,7,11,9,-1],[10,4,9,6,4,10,-1],[4,10,6,4,9,10,0,8,3,-1],[10,0,1,10,6,0,6,4,0,-1],[8,3,1,8,1,6,8,6,4,6,1,10,-1],[1,4,9,1,2,4,2,6,4,-1],[3,0,8,1,2,9,2,4,9,2,6,4,-1],[0,2,4,4,2,6,-1],[8,3,2,8,2,4,4,2,6,-1],[10,4,9,10,6,4,11,2,3,-1],[0,8,2,2,8,11,4,9,10,4,10,6,-1],[3,11,2,0,1,6,0,6,4,6,1,10,-1],[6,4,1,6,1,10,4,8,1,2,1,11,8,11,1,-1],[9,6,4,9,3,6,9,1,3,11,6,3,-1],[8,11,1,8,1,0,11,6,1,9,1,4,6,4,1,-1],[3,11,6,3,6,0,0,6,4,-1],[6,4,8,11,6,8,-1],[7,10,6,7,8,10,8,9,10,-1],[0,7,3,0,10,7,0,9,10,6,7,10,-1],[10,6,7,1,10,7,1,7,8,1,8,0,-1],[10,6,7,10,7,1,1,7,3,-1],[1,2,6,1,6,8,1,8,9,8,6,7,-1],[2,6,9,2,9,1,6,7,9,0,9,3,7,3,9,-1],[7,8,0,7,0,6,6,0,2,-1],[7,3,2,6,7,2,-1],[2,3,11,10,6,8,10,8,9,8,6,7,-1],[2,0,7,2,7,11,0,9,7,6,7,10,9,10,7,-1],[1,8,0,1,7,8,1,10,7,6,7,10,2,3,11,-1],[11,2,1,11,1,7,10,6,1,6,7,1,-1],[8,9,6,8,6,7,9,1,6,11,6,3,1,3,6,-1],[0,9,1,11,6,7,-1],[7,8,0,7,0,6,3,11,0,11,6,0,-1],[7,11,6,-1],[7,6,11,-1],[3,0,8,11,7,6,-1],[0,1,9,11,7,6,-1],[8,1,9,8,3,1,11,7,6,-1],[10,1,2,6,11,7,-1],[1,2,10,3,0,8,6,11,7,-1],[2,9,0,2,10,9,6,11,7,-1],[6,11,7,2,10,3,10,8,3,10,9,8,-1],[7,2,3,6,2,7,-1],[7,0,8,7,6,0,6,2,0,-1],[2,7,6,2,3,7,0,1,9,-1],[1,6,2,1,8,6,1,9,8,8,7,6,-1],[10,7,6,10,1,7,1,3,7,-1],[10,7,6,1,7,10,1,8,7,1,0,8,-1],[0,3,7,0,7,10,0,10,9,6,10,7,-1],[7,6,10,7,10,8,8,10,9,-1],[6,8,4,11,8,6,-1],[3,6,11,3,0,6,0,4,6,-1],[8,6,11,8,4,6,9,0,1,-1],[9,4,6,9,6,3,9,3,1,11,3,6,-1],[6,8,4,6,11,8,2,10,1,-1],[1,2,10,3,0,11,0,6,11,0,4,6,-1],[4,11,8,4,6,11,0,2,9,2,10,9,-1],[10,9,3,10,3,2,9,4,3,11,3,6,4,6,3,-1],[8,2,3,8,4,2,4,6,2,-1],[0,4,2,4,6,2,-1],[1,9,0,2,3,4,2,4,6,4,3,8,-1],[1,9,4,1,4,2,2,4,6,-1],[8,1,3,8,6,1,8,4,6,6,10,1,-1],[10,1,0,10,0,6,6,0,4,-1],[4,6,3,4,3,8,6,10,3,0,3,9,10,9,3,-1],[10,9,4,6,10,4,-1],[4,9,5,7,6,11,-1],[0,8,3,4,9,5,11,7,6,-1],[5,0,1,5,4,0,7,6,11,-1],[11,7,6,8,3,4,3,5,4,3,1,5,-1],[9,5,4,10,1,2,7,6,11,-1],[6,11,7,1,2,10,0,8,3,4,9,5,-1],[7,6,11,5,4,10,4,2,10,4,0,2,-1],[3,4,8,3,5,4,3,2,5,10,5,2,11,7,6,-1],[7,2,3,7,6,2,5,4,9,-1],[9,5,4,0,8,6,0,6,2,6,8,7,-1],[3,6,2,3,7,6,1,5,0,5,4,0,-1],[6,2,8,6,8,7,2,1,8,4,8,5,1,5,8,-1],[9,5,4,10,1,6,1,7,6,1,3,7,-1],[1,6,10,1,7,6,1,0,7,8,7,0,9,5,4,-1],[4,0,10,4,10,5,0,3,10,6,10,7,3,7,10,-1],[7,6,10,7,10,8,5,4,10,4,8,10,-1],[6,9,5,6,11,9,11,8,9,-1],[3,6,11,0,6,3,0,5,6,0,9,5,-1],[0,11,8,0,5,11,0,1,5,5,6,11,-1],[6,11,3,6,3,5,5,3,1,-1],[1,2,10,9,5,11,9,11,8,11,5,6,-1],[0,11,3,0,6,11,0,9,6,5,6,9,1,2,10,-1],[11,8,5,11,5,6,8,0,5,10,5,2,0,2,5,-1],[6,11,3,6,3,5,2,10,3,10,5,3,-1],[5,8,9,5,2,8,5,6,2,3,8,2,-1],[9,5,6,9,6,0,0,6,2,-1],[1,5,8,1,8,0,5,6,8,3,8,2,6,2,8,-1],[1,5,6,2,1,6,-1],[1,3,6,1,6,10,3,8,6,5,6,9,8,9,6,-1],[10,1,0,10,0,6,9,5,0,5,6,0,-1],[0,3,8,5,6,10,-1],[10,5,6,-1],[11,5,10,7,5,11,-1],[11,5,10,11,7,5,8,3,0,-1],[5,11,7,5,10,11,1,9,0,-1],[10,7,5,10,11,7,9,8,1,8,3,1,-1],[11,1,2,11,7,1,7,5,1,-1],[0,8,3,1,2,7,1,7,5,7,2,11,-1],[9,7,5,9,2,7,9,0,2,2,11,7,-1],[7,5,2,7,2,11,5,9,2,3,2,8,9,8,2,-1],[2,5,10,2,3,5,3,7,5,-1],[8,2,0,8,5,2,8,7,5,10,2,5,-1],[9,0,1,5,10,3,5,3,7,3,10,2,-1],[9,8,2,9,2,1,8,7,2,10,2,5,7,5,2,-1],[1,3,5,3,7,5,-1],[0,8,7,0,7,1,1,7,5,-1],[9,0,3,9,3,5,5,3,7,-1],[9,8,7,5,9,7,-1],[5,8,4,5,10,8,10,11,8,-1],[5,0,4,5,11,0,5,10,11,11,3,0,-1],[0,1,9,8,4,10,8,10,11,10,4,5,-1],[10,11,4,10,4,5,11,3,4,9,4,1,3,1,4,-1],[2,5,1,2,8,5,2,11,8,4,5,8,-1],[0,4,11,0,11,3,4,5,11,2,11,1,5,1,11,-1],[0,2,5,0,5,9,2,11,5,4,5,8,11,8,5,-1],[9,4,5,2,11,3,-1],[2,5,10,3,5,2,3,4,5,3,8,4,-1],[5,10,2,5,2,4,4,2,0,-1],[3,10,2,3,5,10,3,8,5,4,5,8,0,1,9,-1],[5,10,2,5,2,4,1,9,2,9,4,2,-1],[8,4,5,8,5,3,3,5,1,-1],[0,4,5,1,0,5,-1],[8,4,5,8,5,3,9,0,5,0,3,5,-1],[9,4,5,-1],[4,11,7,4,9,11,9,10,11,-1],[0,8,3,4,9,7,9,11,7,9,10,11,-1],[1,10,11,1,11,4,1,4,0,7,4,11,-1],[3,1,4,3,4,8,1,10,4,7,4,11,10,11,4,-1],[4,11,7,9,11,4,9,2,11,9,1,2,-1],[9,7,4,9,11,7,9,1,11,2,11,1,0,8,3,-1],[11,7,4,11,4,2,2,4,0,-1],[11,7,4,11,4,2,8,3,4,3,2,4,-1],[2,9,10,2,7,9,2,3,7,7,4,9,-1],[9,10,7,9,7,4,10,2,7,8,7,0,2,0,7,-1],[3,7,10,3,10,2,7,4,10,1,10,0,4,0,10,-1],[1,10,2,8,7,4,-1],[4,9,1,4,1,7,7,1,3,-1],[4,9,1,4,1,7,0,8,1,8,7,1,-1],[4,0,3,7,4,3,-1],[4,8,7,-1],[9,10,8,10,11,8,-1],[3,0,9,3,9,11,11,9,10,-1],[0,1,10,0,10,8,8,10,11,-1],[3,1,10,11,3,10,-1],[1,2,11,1,11,9,9,11,8,-1],[3,0,9,3,9,11,1,2,9,2,11,9,-1],[0,2,11,8,0,11,-1],[3,2,11,-1],[2,3,8,2,8,10,10,8,9,-1],[9,10,2,0,9,2,-1],[2,3,8,2,8,10,0,1,8,1,10,8,-1],[1,10,2,-1],[1,3,8,9,1,8,-1],[0,9,1,-1],[0,3,8,-1],[-1]];
+    const CO=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+    const EC=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+    // Edge axis: which axis each edge runs along, and lower corner
+    const EA=[0,1,0,1,0,1,0,1,2,2,2,2]; // 0=X,1=Y,2=Z
+
+    // --- 2D Signed Distance Field, chamfer directly at column resolution ---
+    // Old path: chamfer at full 256×256 (~130k ops per pass × 2 passes) then
+    // downsample. New path: downsample the mask first, then chamfer at 86×86
+    // (~14k ops per pass). ~8× fewer distance ops per layer with visually
+    // identical results at STEP=3 (already the Laplacian's job to smooth).
+    function signedDist2D(fa,S,z){
+        const cols=Math.ceil(S/STEP);
+        const m=new Uint8Array(cols*cols);
+        // A column is "filled" if ANY voxel inside it is filled. Preserves thin
+        // strokes across STEP boundaries — better than average-thresholding.
+        const zOff=z*S*S;
+        for(let y=0;y<S;y++){
+            const cy=(y/STEP)|0;
+            const rowOff=zOff+y*S;
+            const cRowOff=cy*cols;
+            for(let x=0;x<S;x++){
+                if(fa[rowOff+x]) m[cRowOff+((x/STEP)|0)]=1;
+            }
+        }
+        const dIn=new Float32Array(cols*cols),dOut=new Float32Array(cols*cols);
+        const I=cols*2;
+        for(let i=0;i<cols*cols;i++){dIn[i]=m[i]?I:0;dOut[i]=m[i]?0:I;}
+        function chamfer(d){
+            for(let y=0;y<cols;y++)for(let x=0;x<cols;x++){const i=y*cols+x;if(!d[i])continue;
+                if(x>0)d[i]=Math.min(d[i],d[i-1]+1);if(y>0)d[i]=Math.min(d[i],d[(y-1)*cols+x]+1);
+                if(x>0&&y>0)d[i]=Math.min(d[i],d[(y-1)*cols+x-1]+1.41);
+                if(x<cols-1&&y>0)d[i]=Math.min(d[i],d[(y-1)*cols+x+1]+1.41);
+            }
+            for(let y=cols-1;y>=0;y--)for(let x=cols-1;x>=0;x--){const i=y*cols+x;if(!d[i])continue;
+                if(x<cols-1)d[i]=Math.min(d[i],d[i+1]+1);if(y<cols-1)d[i]=Math.min(d[i],d[(y+1)*cols+x]+1);
+                if(x<cols-1&&y<cols-1)d[i]=Math.min(d[i],d[(y+1)*cols+x+1]+1.41);
+                if(x>0&&y<cols-1)d[i]=Math.min(d[i],d[(y+1)*cols+x-1]+1.41);
+            }
+        }
+        chamfer(dIn);chamfer(dOut);
+        // Directly in field-cell units — no per-cell average pass needed.
+        const sd=new Float32Array(cols*cols);
+        for(let i=0;i<cols*cols;i++) sd[i]=m[i]?-dIn[i]:dOut[i];
+        return {sd,cols};
+    }
+
+    // --- Build 3D SDF field from 2D signed distance ---
+    function buildSDF(sd2d,cols,depthFactor){
+        const fw=cols+PAD*2, fh=fw, fd=9; // 9 Z slices
+        const sdf=new Float32Array(fw*fh*fd);
+        const halfH=2.0; // half-thickness in field Z units
+        const zCenter=4; // center Z slice
+        for(let fz=0;fz<fd;fz++){
+            const dz=Math.abs(fz-zCenter)-halfH; // distance from slab surface in Z
+            for(let fy=0;fy<fh;fy++){
+                for(let fx=0;fx<fw;fx++){
+                    // Map field coords to column coords
+                    const cx=fx-PAD, cy=fy-PAD;
+                    let d2d;
+                    if(cx<0||cx>=cols||cy<0||cy>=cols) d2d=PAD+1; // outside = positive
+                    else d2d=sd2d[cy*cols+cx];
+                    // 3D SDF: rounded box union of 2D distance and Z distance
+                    // For rounded edges: length(max(vec2(d2d, dz), 0)) + min(max(d2d, dz), 0)
+                    const dx=Math.max(d2d,0), dzp=Math.max(dz,0);
+                    const outside=Math.sqrt(dx*dx+dzp*dzp);
+                    const inside=Math.min(Math.max(d2d,dz),0);
+                    sdf[fz*fw*fh+fy*fw+fx]=outside+inside;
+                }
+            }
+        }
+        // Separable 3-axis blur with [1,2,1]/4 weights along each axis. Three
+        // 3-tap passes (9 reads/cell total) produce the same effective kernel
+        // as the original 27-tap non-separable box, at 1/3 the read count.
+        // Interior taps skip bounds checks; boundary cells clamp to the same
+        // cell (as if the outer neighbor equalled the current one) — that's a
+        // safe reflection for an SDF that's already positive outside the pad.
+        const sh=blurScratch(sdf.length);
+        // X pass: sdf -> sh
+        for(let z=0;z<fd;z++)for(let y=0;y<fh;y++){
+            const base=z*fw*fh+y*fw;
+            sh[base]=(sdf[base]*3+sdf[base+1])*0.25;
+            for(let x=1;x<fw-1;x++){
+                const i=base+x;
+                sh[i]=(sdf[i-1]+sdf[i]*2+sdf[i+1])*0.25;
+            }
+            const t=base+fw-1;
+            sh[t]=(sdf[t-1]+sdf[t]*3)*0.25;
+        }
+        // Y pass: sh -> sdf (in-place reuse)
+        for(let z=0;z<fd;z++)for(let x=0;x<fw;x++){
+            const col=z*fw*fh+x;
+            sdf[col]=(sh[col]*3+sh[col+fw])*0.25;
+            for(let y=1;y<fh-1;y++){
+                const i=col+y*fw;
+                sdf[i]=(sh[i-fw]+sh[i]*2+sh[i+fw])*0.25;
+            }
+            const t=col+(fh-1)*fw;
+            sdf[t]=(sh[t-fw]+sh[t]*3)*0.25;
+        }
+        // Z pass: sdf -> sh (final result)
+        const layer=fw*fh;
+        for(let y=0;y<fh;y++)for(let x=0;x<fw;x++){
+            const col=y*fw+x;
+            sh[col]=(sdf[col]*3+sdf[col+layer])*0.25;
+            for(let z=1;z<fd-1;z++){
+                const i=col+z*layer;
+                sh[i]=(sdf[i-layer]+sdf[i]*2+sdf[i+layer])*0.25;
+            }
+            const t=col+(fd-1)*layer;
+            sh[t]=(sdf[t-layer]+sdf[t]*3)*0.25;
+        }
+        return{sdf:sh,fw,fh,fd};
+    }
+
+    // Worker-scoped scratch buffer for the separable blur — reused across all
+    // layer bakes so we're not doing `new Float32Array(sdf.length)` per layer
+    // (12 layers × per-stroke debounce = a lot of GC pressure on iPad).
+    let _blurScratch=null;
+    function blurScratch(size){
+        if(!_blurScratch||_blurScratch.length<size)_blurScratch=new Float32Array(size);
+        else if(_blurScratch.length>size){
+            // fresh view avoids stale data past 'size'
+            return _blurScratch.subarray(0,size);
+        }
+        return _blurScratch;
+    }
+
+    // --- March with edge cache (vertex deduplication) ---
+    function marchSDF(data){
+        const{sdf:f,fw,fh,fd}=data;
+        const iso=0; // SDF: surface at 0
+        const verts=[],norms=[],tris=[];
+        const edgeCache=new Map();
+        function gv(x,y,z){if(x<0||x>=fw||y<0||y>=fh||z<0||z>=fd)return PAD+2;return f[z*fw*fh+y*fw+x];}
+        // Gradient normal via central differences on SDF
+        function gradN(x,y,z){
+            const e=0.5;
+            const gx=gv(x+1,y,z)-gv(x-1,y,z);
+            const gy=gv(x,y+1,z)-gv(x,y-1,z);
+            const gz=gv(x,y,z+1)-gv(x,y,z-1);
+            const l=Math.sqrt(gx*gx+gy*gy+gz*gz);
+            return l>1e-4?[gx/l,gy/l,gz/l]:[0,0,1];
+        }
+        function edgeKey(gx,gy,gz,axis){return gx+gy*4096+gz*16777216+axis*68719476736;}
+        // Corner offsets for global grid position
+        const CX=[0,1,1,0,0,1,1,0],CY=[0,0,1,1,0,0,1,1],CZ=[0,0,0,0,1,1,1,1];
+        // Edge lower corner offsets + axis
+        const ELX=[0,1,0,0,0,1,0,0,0,1,1,0];
+        const ELY=[0,0,1,0,0,0,1,0,0,0,1,1];
+        const ELZ=[0,0,0,0,1,1,1,1,0,0,0,0];
+
+        for(let z=0;z<fd-1;z++)for(let y=0;y<fh-1;y++)for(let x=0;x<fw-1;x++){
+            const v=[];for(let i=0;i<8;i++)v.push(gv(x+CX[i],y+CY[i],z+CZ[i]));
+            let ci=0;for(let i=0;i<8;i++)if(v[i]<iso)ci|=(1<<i);
+            if(ET[ci]===0)continue;
+
+            const evi=new Int32Array(12).fill(-1);
+            for(let e=0;e<12;e++){
+                if(!(ET[ci]&(1<<e)))continue;
+                const gx=x+ELX[e],gy=y+ELY[e],gz=z+ELZ[e];
+                const ek=edgeKey(gx,gy,gz,EA[e]);
+                const cached=edgeCache.get(ek);
+                if(cached!==undefined){evi[e]=cached;continue;}
+
+                const[c0,c1]=EC[e];
+                const v0=v[c0],v1=v[c1];
+                const t=(Math.abs(v1-v0)>1e-6)?Math.max(0,Math.min(1,(iso-v0)/(v1-v0))):0.5;
+                const px=x+CX[c0]+(CX[c1]-CX[c0])*t;
+                const py=y+CY[c0]+(CY[c1]-CY[c0])*t;
+                const pz=z+CZ[c0]+(CZ[c1]-CZ[c0])*t;
+                // Interpolate gradient normals at corners
+                const n0=gradN(x+CX[c0],y+CY[c0],z+CZ[c0]);
+                const n1=gradN(x+CX[c1],y+CY[c1],z+CZ[c1]);
+                const nx=n0[0]*(1-t)+n1[0]*t, ny=n0[1]*(1-t)+n1[1]*t, nz=n0[2]*(1-t)+n1[2]*t;
+                const nl=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+
+                const idx=verts.length/3;
+                // World position: field x,y -> world X,Z; field z -> world Y
+                verts.push((px-PAD)*STEP, (pz-4)*LT, (py-PAD)*STEP);
+                norms.push(nx/nl, nz/nl, ny/nl); // remap axes
+                edgeCache.set(ek,idx);
+                evi[e]=idx;
+            }
+            const r=TT[ci];
+            for(let i=0;r[i]!==-1;i+=3){
+                tris.push(evi[r[i]],evi[r[i+1]],evi[r[i+2]]);
+            }
+        }
+        return{verts:new Float32Array(verts),norms:new Float32Array(norms),tris:new Int32Array(tris)};
+    }
+
+    // --- Bilinear sample helper ---
+    function bsamp(map,cols,wx,wz){
+        const fx=wx/STEP,fy=wz/STEP;
+        const x0=Math.max(0,Math.min(cols-1,Math.floor(fx))),y0=Math.max(0,Math.min(cols-1,Math.floor(fy)));
+        const x1=Math.min(cols-1,x0+1),y1=Math.min(cols-1,y0+1);
+        const tx=Math.max(0,Math.min(1,fx-x0)),ty=Math.max(0,Math.min(1,fy-y0));
+        return map[y0*cols+x0]*(1-tx)*(1-ty)+map[y0*cols+x1]*tx*(1-ty)+map[y1*cols+x0]*(1-tx)*ty+map[y1*cols+x1]*tx*ty;
+    }
+
+    function blurHM(s,cols,r){
+        const d=new Float32Array(cols*cols);
+        for(let y=0;y<cols;y++)for(let x=0;x<cols;x++){let sum=0,cnt=0;
+            for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+                const nx=x+dx,ny=y+dy;if(nx<0||nx>=cols||ny<0||ny>=cols)continue;
+                const w=1/(1+Math.abs(dx)+Math.abs(dy));sum+=s[ny*cols+nx]*w;cnt+=w;
+            }d[y*cols+x]=sum/cnt;}
+        return d;
+    }
+
+    // --- Laplacian smoothing with CSR adjacency (typed arrays, zero Sets).
+    // Original allocated N Sets per call × 2 passes × N layers per stroke
+    // → tens of thousands of Set instances = GC storm on iPad. Rebuild
+    // CSR ONCE, hand back a reusable smoother for the two passes so the
+    // adjacency work isn't duplicated.
+    // On manifold meshes each undirected edge is shared by exactly two
+    // triangles, so accepting duplicates in the neighbor list divides by 2k
+    // instead of k when averaging — mathematically identical to Set dedup.
+    let _laplBufs=null; // reused typed-array pool
+    function laplBufs(nCap,eCap){
+        if(!_laplBufs||_laplBufs.deg.length<nCap||_laplBufs.nbrs.length<eCap){
+            _laplBufs={
+                deg:   new Uint32Array(Math.max(nCap, _laplBufs?_laplBufs.deg.length*2:nCap)),
+                starts:new Uint32Array(Math.max(nCap+1, _laplBufs?_laplBufs.starts.length*2:nCap+1)),
+                cur:   new Uint32Array(Math.max(nCap, _laplBufs?_laplBufs.cur.length*2:nCap)),
+                nbrs:  new Uint32Array(Math.max(eCap, _laplBufs?_laplBufs.nbrs.length*2:eCap)),
+                nv:    new Float32Array(Math.max(nCap*3, _laplBufs?_laplBufs.nv.length*2:nCap*3)),
+                nn:    new Float32Array(Math.max(nCap*3, _laplBufs?_laplBufs.nn.length*2:nCap*3)),
+            };
+        }
+        return _laplBufs;
+    }
+    function buildCSR(t,n){
+        const eCap=t.length*2; // 6 directed edges per triangle
+        const b=laplBufs(n,eCap);
+        const deg=b.deg, starts=b.starts, cur=b.cur, nbrs=b.nbrs;
+        // Zero only the range we'll touch (avoids full-array fill overhead).
+        for(let i=0;i<n;i++){deg[i]=0;cur[i]=0;}
+        for(let i=0;i<t.length;i+=3){
+            const a=t[i],b1=t[i+1],c=t[i+2];
+            deg[a]+=2; deg[b1]+=2; deg[c]+=2;
+        }
+        let acc=0;
+        for(let i=0;i<n;i++){starts[i]=acc; acc+=deg[i];}
+        starts[n]=acc;
+        for(let i=0;i<t.length;i+=3){
+            const a=t[i],b1=t[i+1],c=t[i+2];
+            nbrs[starts[a]+cur[a]++]=b1;
+            nbrs[starts[a]+cur[a]++]=c;
+            nbrs[starts[b1]+cur[b1]++]=a;
+            nbrs[starts[b1]+cur[b1]++]=c;
+            nbrs[starts[c]+cur[c]++]=a;
+            nbrs[starts[c]+cur[c]++]=b1;
+        }
+        return b;
+    }
+    function laplPass(v,no,csr,n,f){
+        const {starts,nbrs,nv,nn}=csr;
+        for(let i=0;i<n;i++){
+            const s=starts[i], e=starts[i+1], k=e-s, bi=i*3;
+            if(k===0){
+                nv[bi]=v[bi];nv[bi+1]=v[bi+1];nv[bi+2]=v[bi+2];
+                nn[bi]=no[bi];nn[bi+1]=no[bi+1];nn[bi+2]=no[bi+2];
+                continue;
+            }
+            let ax=0,ay=0,az=0,anx=0,any=0,anz=0;
+            for(let p=s;p<e;p++){
+                const kk=nbrs[p]*3;
+                ax+=v[kk];ay+=v[kk+1];az+=v[kk+2];
+                anx+=no[kk];any+=no[kk+1];anz+=no[kk+2];
+            }
+            const invK=1/k;
+            nv[bi]  =v[bi]  *(1-f)+(ax*invK)*f;
+            nv[bi+1]=v[bi+1]*(1-f)+(ay*invK)*f;
+            nv[bi+2]=v[bi+2]*(1-f)+(az*invK)*f;
+            const nl=Math.sqrt(anx*anx+any*any+anz*anz)||1;
+            const invNl=1/nl;
+            nn[bi]=anx*invNl;nn[bi+1]=any*invNl;nn[bi+2]=anz*invNl;
+        }
+        // Copy back into the input arrays — next pass reads updated data
+        // without allocating a fresh pair of buffers.
+        const outV=new Float32Array(n*3);
+        const outN=new Float32Array(n*3);
+        for(let i=0;i<n*3;i++){outV[i]=nv[i]; outN[i]=nn[i];}
+        return {verts:outV,norms:outN,tris:csr.tris||null};
+    }
+    function lapl(v,no,t,f){
+        const n=v.length/3;
+        const csr=buildCSR(t,n);
+        const out=laplPass(v,no,csr,n,f);
+        out.tris=t;
+        return out;
+    }
+    // Two-pass helper — builds CSR ONCE, then runs two smoothing passes.
+    // Cuts adjacency work in half vs calling lapl() twice.
+    function laplTwice(v,no,t,f1,f2){
+        const n=v.length/3;
+        const csr=buildCSR(t,n);
+        const p1=laplPass(v,no,csr,n,f1);
+        const p2=laplPass(p1.verts,p1.norms,csr,n,f2);
+        p2.tris=t;
+        return p2;
+    }
+
+    // --- Main message handler ---
+    self.onmessage=function(e){
+        const{id,filledArr,layers,S,depthFactor}=e.data;
+        const fa=new Uint8Array(filledArr);
+        const cols=Math.ceil(S/STEP),stackLT=LT+LG;
+
+        // Compute SDF per layer ONCE and cache (previously computed twice)
+        const sdCache={};
+        for(const l of layers){ sdCache[l.color]=signedDist2D(fa,S,l.z); }
+
+        // Compute stacking heights using cached SDF
+        const gh=new Float32Array(cols*cols),chm={};
+        for(const l of layers){
+            const sd=sdCache[l.color].sd;
+            const lc=new Uint8Array(cols*cols);
+            for(let y=0;y<S;y++)for(let x=0;x<S;x++)
+                if(fa[l.z*S*S+y*S+x])lc[Math.floor(y/STEP)*cols+Math.floor(x/STEP)]=1;
+            const co=new Float32Array(cols*cols);
+            for(let i=0;i<cols*cols;i++)if(lc[i])co[i]=gh[i];
+            const sm=blurHM(co,cols,3);
+            for(let i=0;i<cols*cols;i++)if(!lc[i])sm[i]=0;
+            chm[l.color]=sm;
+            let im=null;
+            if(depthFactor>0){
+                im=new Float32Array(cols*cols);
+                let mx=0;for(let i=0;i<cols*cols;i++)if(-sd[i]>mx)mx=-sd[i];
+                if(mx>0)for(let i=0;i<cols*cols;i++)im[i]=sd[i]<0?Math.sqrt(-sd[i]/mx)*depthFactor:0;
+            }
+            for(let i=0;i<cols*cols;i++)if(lc[i])gh[i]+=stackLT+(im?im[i]:0);
+        }
+
+        const results=[];
+        for(const l of layers){
+            const sd=sdCache[l.color].sd;
+            const sdfData=buildSDF(sd,cols,depthFactor);
+            let mesh=marchSDF(sdfData);
+            if(mesh.verts.length===0)continue;
+
+            // Laplacian smoothing for noticeably smoother surface than raw MC.
+            // Two lighter passes preserve volume better than one strong pass and
+            // are essential at STEP=3 to hide the coarser grid.
+            // laplTwice reuses the CSR adjacency across both passes.
+            mesh=laplTwice(mesh.verts,mesh.norms,mesh.tris,0.5,0.3);
+
+            const ch=chm[l.color];
+            const depth=depthFactor||0;
+
+            let mnY=1e9,mxY=-1e9;
+            for(let i=1;i<mesh.verts.length;i+=3){
+                if(mesh.verts[i]<mnY)mnY=mesh.verts[i];
+                if(mesh.verts[i]>mxY)mxY=mesh.verts[i];
+            }
+            const yr=mxY-mnY||1,yc=(mnY+mxY)/2;
+
+            let mx=0;for(let i=0;i<cols*cols;i++)if(-sd[i]>mx)mx=-sd[i];
+
+            for(let i=0;i<mesh.verts.length;i+=3){
+                const wx=mesh.verts[i],wy=mesh.verts[i+1],wz=mesh.verts[i+2];
+                mesh.verts[i+1]+=bsamp(ch,cols,wx,wz);
+                if(depth>0&&mx>0){
+                    const cx2=Math.floor(wx/STEP),cy2=Math.floor(wz/STEP);
+                    const si=Math.max(0,Math.min(cols-1,cy2))*cols+Math.max(0,Math.min(cols-1,cx2));
+                    const d2=sd[si]<0?Math.sqrt(-sd[si]/mx):0;
+                    mesh.verts[i+1]+=(wy-yc)/(yr/2)*d2*depth;
+                }
+            }
+
+            // Send INDEXED geometry — Three.js supports this natively and the
+            // GPU buffer is ~3x smaller than the previous non-indexed format.
+            const indices=new Uint32Array(mesh.tris);
+            results.push({
+                color:l.color,
+                positions:mesh.verts.buffer,
+                normals:mesh.norms.buffer,
+                indices:indices.buffer,
+            });
+        }
+        const tr=[];for(const r of results){tr.push(r.positions,r.normals,r.indices);}
+        self.postMessage({id,results},tr);
+    };
+    </script>
+    <script src="js/voxel-grid.js?v=32"></script>
+    <script src="js/layers.js?v=32"></script>
+    <script src="js/marching-cubes.js?v=32"></script>
+    <script src="js/renderer.js?v=32"></script>
+    <script src="js/drawing.js?v=32"></script>
+    <script src="js/file-io.js?v=32"></script>
+    <script src="js/app.js?v=32"></script>
+</body>
+</html>
