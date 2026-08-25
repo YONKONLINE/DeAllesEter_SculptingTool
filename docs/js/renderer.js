@@ -181,9 +181,6 @@ const Renderer = (() => {
         lastPointerX = e.clientX;
         lastPointerY = e.clientY;
         if (idleTimer) clearTimeout(idleTimer);
-        // Free the main thread while the user drags — the 2D wobble at 6fps
-        // is enough overhead to visibly stutter iPad rotation.
-        if (typeof Drawing !== 'undefined' && Drawing.suspendWobble) Drawing.suspendWobble();
     }
 
     function onPointerMove(e) {
@@ -204,19 +201,12 @@ const Renderer = (() => {
         if (!isDragging) return;
         isDragging = false;
         // Momentum continues from current velocity — handled in animate().
-        // Wobble stays suspended until momentum fully dies (see animate()) so
-        // the coast phase isn't fighting the 2D repaint on the main thread.
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
             isAutoRotating = true;
             autoRotVelX = (Math.random() - 0.5) * 0.004;
             autoRotVelY = (Math.random() * 0.004) + 0.003;
             needsRender = true;
-            // Auto-rotate is the "attract mode" state — the user's attention
-            // is on the 3D preview, not the 2D drawing. Suspending the wobble
-            // timer during this state frees the main thread so the spin runs
-            // at native fps instead of jittering under wobble's ImageData load.
-            if (typeof Drawing !== 'undefined' && Drawing.suspendWobble) Drawing.suspendWobble();
         }, 3000);
     }
 
@@ -478,7 +468,6 @@ const Renderer = (() => {
     // rAF fires at whatever the display refresh is (60/120Hz). We render only
     // when something visibly changes — drag, momentum, auto-rotate tick, or a
     // fresh mesh. Idle without auto-rotate = zero GPU work.
-    let wasCoasting = false;
     function animate() {
         animId = requestAnimationFrame(animate);
 
@@ -498,15 +487,6 @@ const Renderer = (() => {
             rotY += autoRotVelY;
             rotationChanged = true;
         }
-
-        // Only resume the 2D wobble once the user's drag AND its coast phase
-        // are fully finished — pointerup fires before momentum decays, and
-        // running both loops at once is the actual iPad-jank window.
-        if (wasCoasting && !isDragging && !inMomentum) {
-            if (typeof Drawing !== 'undefined' && Drawing.resumeWobble) Drawing.resumeWobble();
-            wasCoasting = false;
-        }
-        if (isDragging || inMomentum) wasCoasting = true;
 
         if (!rotationChanged && !isDragging && !needsRender) return;
 

@@ -181,45 +181,6 @@ const Drawing = (() => {
         render();
     }
 
-    // Wobble animation state
-    const WOBBLE_AMP = 0.6;    // pixel offset amount per cell
-    // 6fps: still reads as stop-motion when it runs.
-    const WOBBLE_FPS = 6;
-    let wobbleFrame = 0;
-    let wobbleTimer = null;
-
-    // The wobble is a "life sign" — nice-to-have when the app is truly idle,
-    // but a main-thread thief whenever the 3D preview is drawing frames (drag,
-    // momentum, auto-rotate). The renderer calls suspend/resume as those states
-    // change; we tear DOWN the setInterval on suspend so there are no wakeups
-    // and no rAF contention while auto-rotate is spinning.
-    function _spawnTimer() {
-        if (wobbleTimer) return;
-        wobbleTimer = setInterval(() => {
-            if (typeof document !== 'undefined' && document.hidden) return;
-            wobbleFrame++;
-            render();
-        }, 1000 / WOBBLE_FPS);
-    }
-    function _killTimer() {
-        if (wobbleTimer) { clearInterval(wobbleTimer); wobbleTimer = null; }
-    }
-
-    // Public API. startWobble is now a no-op — the wobble is off by default
-    // (because auto-rotate is on by default) and only wakes up via resumeWobble
-    // when the renderer detects the truly-idle window after a drag+coast ends.
-    function startWobble() {}
-    function stopWobble() { _killTimer(); }
-    function suspendWobble() { _killTimer(); }
-    function resumeWobble() { _spawnTimer(); }
-
-    // Cheap noise for 2D wobble
-    function wobbleNoise(x, y, seed) {
-        return Math.sin(x * 1.7 + seed * 2.3) * 0.4
-             + Math.sin(y * 2.3 + seed * 1.7) * 0.3
-             + Math.sin((x + y) * 0.9 + seed * 3.1) * 0.3;
-    }
-
     // Deferred render via rAF — coalesces high-rate pointer events
     // (iPad ProMotion fires pointermove up to 120Hz; without this,
     // every event would trigger a full multi-MB ImageData paint).
@@ -236,16 +197,13 @@ const Drawing = (() => {
     // Reused ImageData buffer — avoids allocating a fresh multi-MB
     // typed array on every paint, which causes heavy GC churn on iPad.
     // reusablePixels32 is a Uint32Array view over the same buffer so the pixel
-    // loop can write ONE packed RGBA word per pixel instead of four bytes —
-    // ~4× less inner-loop work in the wobble path.
+    // loop can write ONE packed RGBA word per pixel instead of four bytes.
     let reusableImageData = null;
     let reusablePixels32 = null;
 
     // Sparse cell cache: for each layer we keep just the packed (y*S+x) indices
-    // of filled cells, keyed by VoxelGrid.generation. Wobble ticks that don't
-    // touch voxel data reuse the cache and skip the SIZE*SIZE scan entirely —
-    // on a 20%-filled 256×256 canvas with 3 layers that's ~13k iterations per
-    // tick instead of ~196k, and no per-cell branch on filledArr.
+    // of filled cells, keyed by VoxelGrid.generation. Repeat renders during a
+    // stroke reuse the cache and skip the SIZE*SIZE scan on unchanged layers.
     let cellCache = [];        // Array<{z, colorRGB:[r,g,b], cells:Uint32Array}>
     let cachedGeneration = -1;
     let cachedLayerKey = '';   // reflects z-order + color set
@@ -322,8 +280,7 @@ const Drawing = (() => {
         // clears in ~1/4 the writes of a byte-level 255-fill.
         pixels32.fill(0xFFFFFFFF);
 
-        // Empty grid → single memset + upload, then bail. Idle wobble ticks
-        // on a fresh canvas become essentially free.
+        // Empty grid → single memset + upload, then bail.
         if (cellCache.length === 0) {
             ctx.putImageData(reusableImageData, 0, 0);
             return;
@@ -331,8 +288,6 @@ const Drawing = (() => {
 
         const cellW = w / S;
         const cellH = h / S;
-        const t = wobbleFrame;
-        const tSeed = t * 0.7;
 
         // Iterate sparse cells only, in z-order (cache is already sorted).
         for (const layer of cellCache) {
@@ -347,15 +302,12 @@ const Drawing = (() => {
                 const gx = packed % S;
                 const gy = (packed / S) | 0;
 
-                // Wobble offset: shift each cell slightly based on noise
-                const ox = wobbleNoise(gx * 0.15, gy * 0.15, tSeed) * WOBBLE_AMP;
-                const oy = wobbleNoise(gx * 0.15 + 17.3, gy * 0.15 + 31.7, tSeed) * WOBBLE_AMP;
-
-                // Render slightly oversized to prevent white gaps from wobble offsets
-                let px0 = (gx * cellW + ox) - 1; px0 = px0 < 0 ? 0 : px0 | 0;
-                let py0 = (gy * cellH + oy) - 1; py0 = py0 < 0 ? 0 : py0 | 0;
-                let px1 = ((gx + 1) * cellW + ox) + 1; px1 = px1 > w ? w : Math.ceil(px1);
-                let py1 = ((gy + 1) * cellH + oy) + 1; py1 = py1 > h ? h : Math.ceil(py1);
+                // Floor both edges — cell N's right edge equals cell N+1's
+                // left edge, so cells tile without seams or overlap.
+                const px0 = (gx * cellW) | 0;
+                const py0 = (gy * cellH) | 0;
+                const px1 = ((gx + 1) * cellW) | 0;
+                const py1 = ((gy + 1) * cellH) | 0;
 
                 // One u32 write per pixel instead of four byte writes.
                 for (let py = py0; py < py1; py++) {
@@ -373,8 +325,6 @@ const Drawing = (() => {
     return {
         init, resize, render,
         setTool, setBrushSize,
-        startWobble, stopWobble,
-        suspendWobble, resumeWobble,
         get tool() { return tool; },
         set onStrokeEnd(cb) { onStrokeEnd = cb; },
         set onStrokeStart(cb) { onStrokeStart = cb; },

@@ -410,9 +410,6 @@
         Drawing.onStrokeStart = () => { pushUndo(); };
         Drawing.onStrokeEnd = () => { scheduleUpdateMesh(); };
 
-        // Start the 2D wobble animation
-        Drawing.startWobble();
-
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
