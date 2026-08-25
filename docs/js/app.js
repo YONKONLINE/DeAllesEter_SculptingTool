@@ -67,27 +67,21 @@
         const btnSave = document.getElementById('btn-save');
         const btnOpen = document.getElementById('btn-open');
         const btnExport = document.getElementById('btn-export');
-        const brushSizeInput = document.getElementById('brush-size');
-        const brushSizeLabel = document.getElementById('brush-size-label');
         const fileInput = document.getElementById('file-input');
 
-        btnPencil.addEventListener('click', () => setTool('pencil'));
-        btnEraser.addEventListener('click', () => setTool('eraser'));
-        btnFill.addEventListener('click', () => setTool('fill'));
-        btnUndo.addEventListener('click', undo);
-        btnRedo.addEventListener('click', redo);
+        const bounce = (btn) => {
+            btn.classList.remove('bounce');
+            void btn.offsetWidth;
+            btn.classList.add('bounce');
+        };
 
-        brushSizeInput.min = 6;
-        brushSizeInput.max = 10;
-        brushSizeInput.value = 6;
-        brushSizeLabel.textContent = '6';
-        Drawing.setBrushSize(6);
+        btnPencil.addEventListener('click', () => { bounce(btnPencil); setTool('pencil'); });
+        btnEraser.addEventListener('click', () => { bounce(btnEraser); setTool('eraser'); });
+        btnFill.addEventListener('click',   () => { bounce(btnFill);   setTool('fill'); });
+        btnUndo.addEventListener('click',   () => { bounce(btnUndo);   undo(); });
+        btnRedo.addEventListener('click',   () => { bounce(btnRedo);   redo(); });
 
-        brushSizeInput.addEventListener('input', () => {
-            const s = parseInt(brushSizeInput.value);
-            Drawing.setBrushSize(s);
-            brushSizeLabel.textContent = s;
-        });
+        initBrushSizeControl();
 
 
         btnSave.addEventListener('click', () => FileIO.save());
@@ -117,6 +111,51 @@
         initRestartButton();
         initSecretReveal();
         initSettingsPanel();
+    }
+
+    // ---- Custom drag-to-fill Size / Formaat control ----
+    function initBrushSizeControl() {
+        const pill = document.getElementById('brush-size');
+        const fill = document.getElementById('brush-size-fill');
+        const label = document.getElementById('brush-size-label');
+        const MIN = 1, MAX = 10;
+        let value = 6;
+
+        function apply(v) {
+            const clamped = Math.round(Math.max(MIN, Math.min(MAX, v)));
+            if (clamped === value && parseFloat(fill.style.width) === ((clamped - MIN) / (MAX - MIN)) * 100) return;
+            value = clamped;
+            const pct = ((value - MIN) / (MAX - MIN)) * 100;
+            fill.style.width = pct + '%';
+            label.textContent = value;
+            Drawing.setBrushSize(value);
+        }
+        apply(6);
+
+        let pressing = false;
+        function fromPointer(e) {
+            const rect = pill.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const t = Math.max(0, Math.min(1, x / rect.width));
+            apply(MIN + t * (MAX - MIN));
+        }
+
+        pill.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            pressing = true;
+            pill.setPointerCapture(e.pointerId);
+            fromPointer(e);
+        });
+        pill.addEventListener('pointermove', (e) => { if (pressing) fromPointer(e); });
+        const release = () => { pressing = false; };
+        pill.addEventListener('pointerup', release);
+        pill.addEventListener('pointercancel', release);
+
+        // Keyboard fallback: ← / → tweak by 1
+        pill.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); apply(value + 1); }
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); apply(value - 1); }
+        });
     }
 
     // ---- Restart (clear everything) ----
@@ -278,10 +317,16 @@
         });
     }
 
-    // ---- Layer UI with drag-to-reorder ----
+    // ---- Layer UI with pointer-based drag reorder ----
 
-    let dragSourceHex = null;
     let prevLayerHexes = new Set();
+    // Set to a hex right before Layers.setLayerOrder() so the re-render can
+    // add the drop-bounce class to the same layer at its new DOM position.
+    let justDroppedHex = null;
+    // Set to a hex whose element should NOT get the pop-in "new layer"
+    // animation (used when we drop into a same-slot no-op so the layer
+    // doesn't re-mount into a from-scratch animation).
+    let suppressPopInFor = null;
 
     function renderLayerList() {
         const list = document.getElementById('layer-list');
@@ -291,57 +336,31 @@
         const activeHex = Layers.getActiveColorHex();
         const currentHexes = new Set(layers.map(l => l.color));
 
+        // DOM order top-down = highest z first, so we iterate backward.
         for (let i = layers.length - 1; i >= 0; i--) {
             const layer = layers[i];
             const isActive = layer.color === activeHex;
-            const isNew = !prevLayerHexes.has(layer.color);
+            const isNew = !prevLayerHexes.has(layer.color) && layer.color !== suppressPopInFor;
+            const isDropped = layer.color === justDroppedHex;
+
             const el = document.createElement('div');
-            el.className = 'layer-item' + (isActive ? ' active' : '') + (isNew ? ' pop-in' : '');
-            el.className += Layers.isLightColor(layer.color) ? ' light-color' : ' dark-color';
+            let cls = 'layer-item';
+            if (isActive) cls += ' active';
+            if (isDropped) cls += ' dropping';
+            else if (isNew) cls += ' pop-in';
+            el.className = cls;
             el.style.backgroundColor = layer.color;
-            el.draggable = true;
             el.dataset.hex = layer.color;
 
-            el.addEventListener('click', () => {
-                Layers.setActiveColor(layer.color);
-            });
-
-            el.addEventListener('dragstart', (e) => {
-                dragSourceHex = layer.color;
-                el.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            el.addEventListener('dragend', () => {
-                el.classList.remove('dragging');
-                dragSourceHex = null;
-                list.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over'));
-            });
-
-            el.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                el.classList.add('drag-over');
-            });
-
-            el.addEventListener('dragleave', () => {
-                el.classList.remove('drag-over');
-            });
-
-            el.addEventListener('drop', (e) => {
-                e.preventDefault();
-                el.classList.remove('drag-over');
-                if (dragSourceHex && dragSourceHex !== layer.color) {
-                    pushUndo();
-                    Layers.moveLayer(dragSourceHex, layer.color);
-                    scheduleUpdateMesh();
-                }
-            });
+            attachLayerDrag(el, layer, list);
 
             if (layers.length > 1) {
                 const del = document.createElement('div');
                 del.className = 'layer-delete';
                 del.textContent = '\u00d7';
+                // Prevent the layer's pointerdown handler from starting a drag
+                // when the user hits the little \u00d7 in the corner.
+                del.addEventListener('pointerdown', (e) => { e.stopPropagation(); });
                 del.addEventListener('click', (e) => {
                     e.stopPropagation();
                     pushUndo();
@@ -355,6 +374,167 @@
         }
 
         prevLayerHexes = currentHexes;
+        justDroppedHex = null;
+        suppressPopInFor = null;
+    }
+
+    // Pointer-based drag reorder for a single layer element.
+    //   - Under threshold movement = click \u2192 select layer
+    //   - Beyond threshold           = drag; siblings shift to open a slot at
+    //     the closest insertion index, dragged element follows finger.
+    //   - Drop                       = commit new order via Layers.setLayerOrder,
+    //     bounce the settled element via .dropping animation.
+    function attachLayerDrag(el, layer, list) {
+        let pressing = false;
+        let dragging = false;
+        let startClientY = 0;
+        let siblings = [];       // [{el, natIndex, top, height}] excluding the dragged one
+        let stepSize = 0;        // approximate row-to-row distance
+        let originalDomIndex = 0;
+        let targetIndex = 0;
+
+        el.addEventListener('pointerdown', onDown);
+
+        function onDown(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            pressing = true;
+            startClientY = e.clientY;
+            el.setPointerCapture(e.pointerId);
+            el.addEventListener('pointermove', onMove);
+            el.addEventListener('pointerup', onUp);
+            el.addEventListener('pointercancel', onCancel);
+        }
+
+        function beginDrag() {
+            dragging = true;
+            el.classList.add('dragging');
+            const items = Array.from(list.children);
+            originalDomIndex = items.indexOf(el);
+            const listRect = list.getBoundingClientRect();
+            siblings = [];
+            for (let i = 0; i < items.length; i++) {
+                const n = items[i];
+                if (n === el) continue;
+                const r = n.getBoundingClientRect();
+                siblings.push({
+                    el: n,
+                    natIndex: i,
+                    // Center Y relative to the list, used to compute insertion.
+                    center: (r.top - listRect.top) + r.height / 2,
+                    height: r.height,
+                });
+                // Give siblings a transition so they slide as the phantom slot moves.
+                n.style.transition = 'transform var(--pop) var(--bounce)';
+            }
+            // Uniform step \u2014 use the base layer height (48) + list gap (10).
+            // Active layer being 2x taller doesn't matter for insertion feel;
+            // the .dragging class collapses the dragged element back to 48.
+            stepSize = 58;
+            targetIndex = originalDomIndex;
+        }
+
+        function onMove(e) {
+            if (!pressing) return;
+            const dy = e.clientY - startClientY;
+            if (!dragging) {
+                if (Math.abs(dy) < 6) return;
+                beginDrag();
+            }
+            // Move dragged element with the finger.
+            el.style.transform = `translateY(${dy}px) scale(1.04)`;
+
+            // Compute insertion index by finding which sibling center the
+            // pointer is currently above (accounting for siblings' *natural*
+            // untranslated positions \u2014 their shifts are visual only).
+            const listRect = list.getBoundingClientRect();
+            const pointerY = e.clientY - listRect.top;
+            let newIndex = siblings.length; // past the last slot = end
+            for (let i = 0; i < siblings.length; i++) {
+                if (pointerY < siblings[i].center) {
+                    newIndex = siblings[i].natIndex;
+                    if (newIndex > originalDomIndex) newIndex--;
+                    break;
+                }
+            }
+            newIndex = Math.max(0, Math.min(list.children.length - 1, newIndex));
+
+            if (newIndex !== targetIndex) {
+                targetIndex = newIndex;
+                shiftSiblingsFor(newIndex);
+            }
+        }
+
+        // Given the dragged item's target DOM index, shift each sibling up or
+        // down by one row so an empty slot appears at newIndex.
+        function shiftSiblingsFor(newIndex) {
+            for (const s of siblings) {
+                const nat = s.natIndex;
+                let shift = 0;
+                if (newIndex > originalDomIndex && nat > originalDomIndex && nat <= newIndex) {
+                    shift = -stepSize;
+                } else if (newIndex < originalDomIndex && nat < originalDomIndex && nat >= newIndex) {
+                    shift = stepSize;
+                }
+                s.el.style.transform = shift ? `translateY(${shift}px)` : '';
+            }
+        }
+
+        function clearSiblings() {
+            for (const s of siblings) {
+                s.el.style.transform = '';
+                // Let the next full render own its transition again.
+                s.el.style.transition = '';
+            }
+            siblings = [];
+        }
+
+        function onUp(e) {
+            pressing = false;
+            el.removeEventListener('pointermove', onMove);
+            el.removeEventListener('pointerup', onUp);
+            el.removeEventListener('pointercancel', onCancel);
+
+            if (!dragging) {
+                // A tap \u2014 select this layer and bounce it.
+                Layers.setActiveColor(layer.color);
+                return;
+            }
+
+            const finalIndex = targetIndex;
+            el.classList.remove('dragging');
+            el.style.transform = '';
+            clearSiblings();
+
+            if (finalIndex !== originalDomIndex) {
+                // Compute new hex order and commit.
+                const items = Array.from(list.children);
+                items.splice(items.indexOf(el), 1);
+                items.splice(finalIndex, 0, el);
+                // DOM top-down = highest-z first, so lowest-z-first is reversed.
+                const order = items.map(n => n.dataset.hex).reverse();
+                pushUndo();
+                justDroppedHex = layer.color;
+                Layers.setLayerOrder(order);
+                scheduleUpdateMesh();
+            } else {
+                // Same slot \u2014 still bounce the dropped item for feedback.
+                el.classList.remove('dropping');
+                void el.offsetWidth;
+                el.classList.add('dropping');
+                setTimeout(() => el.classList.remove('dropping'), 560);
+            }
+            dragging = false;
+        }
+
+        function onCancel() {
+            pressing = false;
+            if (dragging) {
+                el.classList.remove('dragging');
+                el.style.transform = '';
+                clearSiblings();
+                dragging = false;
+            }
+        }
     }
 
     function initLayers() {
@@ -383,16 +563,20 @@
         Layers.PALETTE.forEach(({ hex, name }) => {
             const swatch = document.createElement('div');
             swatch.className = 'color-swatch' + (hex === activeHex ? ' active' : '');
-            if (!Layers.isLightColor(hex)) swatch.className += ' dark-swatch';
             swatch.style.backgroundColor = hex;
             swatch.title = name;
             swatch.addEventListener('click', () => {
+                // Selection first — the re-render replaces this element, so the
+                // fresh one is what we want the bounce animation to land on.
                 Layers.setActiveColor(hex);
-                // If in eraser mode, auto-switch to pencil when picking a color
-                if (currentTool === 'eraser') {
-                    setTool('pencil');
-                }
+                if (currentTool === 'eraser') setTool('pencil');
+                const fresh = palette.querySelector(`.color-swatch[data-hex="${hex}"]`) || swatch;
+                fresh.classList.remove('bounce');
+                void fresh.offsetWidth;
+                fresh.classList.add('bounce');
+                setTimeout(() => fresh.classList.remove('bounce'), 500);
             });
+            swatch.dataset.hex = hex;
             palette.appendChild(swatch);
         });
     }

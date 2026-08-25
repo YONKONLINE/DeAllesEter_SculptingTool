@@ -28,10 +28,11 @@ const Drawing = (() => {
 
     function resize() {
         const container = canvas.parentElement;
-        // Square canvas based on available height
-        const size = Math.max(200, container.parentElement.clientHeight);
+        // Fit the largest square that fits both dimensions of the container.
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        const size = Math.max(200, Math.floor(Math.min(w, h)));
 
-        container.style.width = size + 'px';
         canvas.width = size;
         canvas.height = size;
         canvas.style.width = size + 'px';

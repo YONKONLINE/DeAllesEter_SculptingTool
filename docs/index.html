@@ -6,93 +6,99 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>De Alleseter</title>
-    <link rel="stylesheet" href="css/style.css?v=26">
+    <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
     <!-- Top Bar -->
     <header id="top-bar">
-        <div class="top-left">
-        <div class="logo" id="logo">De Alleseter</div>
-        <div class="toolbar toolbar-left">
-            <button id="btn-undo" class="tool-btn" title="Undo">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/></svg>
-            </button>
-            <button id="btn-redo" class="tool-btn" title="Redo">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z" fill="currentColor"/></svg>
-            </button>
-            <div class="separator"></div>
-            <button id="btn-pencil" class="tool-btn active" title="Draw">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>
-            </button>
-            <button id="btn-eraser" class="tool-btn" title="Erase">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.01 4.01 0 01-5.66 0L2.81 17c-.78-.78-.78-2.05 0-2.83l10.6-10.61a2.01 2.01 0 012.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" fill="currentColor"/></svg>
-            </button>
-            <button id="btn-fill" class="tool-btn" title="Fill">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 000 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z" fill="currentColor"/></svg>
-            </button>
-            <div class="separator"></div>
-            <div class="brush-size-control">
-                <label>Size / Formaat</label>
-                <input type="range" id="brush-size" min="6" max="10" value="6" step="1">
-                <span id="brush-size-label">3</span>
+        <div class="top-cluster top-left">
+            <div class="tool-row">
+                <button id="btn-undo" class="tool-btn" title="Undo">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/></svg>
+                </button>
+                <button id="btn-redo" class="tool-btn" title="Redo">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z" fill="currentColor"/></svg>
+                </button>
+                <button id="btn-pencil" class="tool-btn active" title="Draw">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></svg>
+                </button>
+                <button id="btn-eraser" class="tool-btn" title="Erase">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.01 4.01 0 01-5.66 0L2.81 17c-.78-.78-.78-2.05 0-2.83l10.6-10.61a2.01 2.01 0 012.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" fill="currentColor"/></svg>
+                </button>
+                <button id="btn-fill" class="tool-btn" title="Fill">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 000 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z" fill="currentColor"/></svg>
+                </button>
             </div>
-        </div>
+            <div class="tool-sep"></div>
+            <div id="brush-size" class="size-pill" role="slider" tabindex="0">
+                <div id="brush-size-fill" class="size-pill-fill"></div>
+                <span class="size-pill-label">Size / Formaat</span>
+            </div>
+            <span id="brush-size-label" class="size-value">6</span>
         </div>
 
-        <div class="action-group">
-            <button id="btn-restart" class="restart-btn" title="Restart / Opnieuw beginnen">Restart / Opnieuw beginnen</button>
-            <button id="btn-send" class="send-btn" title="Send / Versturen">Send / Versturen</button>
+        <div class="top-cluster top-center">
+            <img id="logo" class="logo-img" src="img/DeAllesEterLogo.png" alt="De Alleseter">
         </div>
 
-        <div class="toolbar toolbar-right" id="extras-toolbar" hidden>
-            <button id="btn-save" class="tool-btn" title="Save">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z" fill="currentColor"/></svg>
-            </button>
-            <button id="btn-open" class="tool-btn" title="Open">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm0 12H4V8h16v10z" fill="currentColor"/></svg>
-            </button>
-            <button id="btn-export" class="tool-btn export-btn" title="Export OBJ">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg>
-                <span class="btn-label">OBJ</span>
-            </button>
-            <button id="btn-settings" class="tool-btn" title="Upload Settings">
-                <svg viewBox="0 0 24 24" width="28" height="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z" fill="currentColor"/></svg>
-            </button>
+        <div class="top-cluster top-right">
+            <button id="btn-restart" class="pill pill-outline" title="Restart / Opnieuw beginnen">Restart / Opnieuw beginnen</button>
+            <button id="btn-send" class="pill pill-filled" title="Send / Versturen">Send / Versturen</button>
         </div>
     </header>
 
+    <!-- Extras toolbar (revealed via 5 taps on logo) -->
+    <div class="extras-toolbar" id="extras-toolbar" hidden>
+        <button id="btn-save" class="tool-btn" title="Save">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z" fill="currentColor"/></svg>
+        </button>
+        <button id="btn-open" class="tool-btn" title="Open">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm0 12H4V8h16v10z" fill="currentColor"/></svg>
+        </button>
+        <button id="btn-export" class="tool-btn export-btn" title="Export OBJ">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg>
+            <span class="btn-label">OBJ</span>
+        </button>
+        <button id="btn-settings" class="tool-btn" title="Upload Settings">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z" fill="currentColor"/></svg>
+        </button>
+    </div>
+
     <!-- Main Content -->
     <main id="main-content">
-        <!-- Layer Sidebar -->
+        <!-- Layers -->
         <aside id="layer-panel">
             <div class="panel-header">Layers / Lagen</div>
             <div id="layer-list"></div>
             <button id="btn-add-layer" class="add-layer-btn" title="Add Layer" style="display:none">+</button>
         </aside>
 
-        <!-- Drawing Area -->
+        <!-- Drawing canvas -->
         <div id="canvas-container">
             <canvas id="draw-canvas"></canvas>
         </div>
 
-        <!-- 3D Preview -->
-        <div id="preview-3d">
-            <div class="preview-header">3D</div>
-            <canvas id="preview-canvas"></canvas>
-        </div>
+        <!-- Colours + 3D preview -->
+        <aside id="right-panel">
+            <div class="panel-header">Colours / Kleuren</div>
+            <div id="color-palette"></div>
+            <div class="panel-header preview-label">3D</div>
+            <div id="preview-3d">
+                <canvas id="preview-canvas"></canvas>
+            </div>
+        </aside>
     </main>
 
-    <!-- Color Palette -->
-    <footer id="color-palette"></footer>
+    <!-- Credit -->
+    <div class="credit-line">Created by / Gemaakt<br>door YONK</div>
 
     <!-- Restart Confirm Popup -->
     <div id="restart-overlay" class="overlay" hidden>
         <div class="modal">
-            <h3>Start over? / Opnieuw beginnen?</h3>
-            <p class="modal-hint">This will erase everything. / Dit wist alles.</p>
+            <p class="modal-title">This delete everything / Dit wist alles.</p>
             <div class="modal-actions">
-                <button id="restart-cancel" class="btn-secondary">No / Nee</button>
-                <button id="restart-confirm" class="btn-primary">Yes / Ja</button>
+                <button id="restart-cancel" class="pill pill-outline">No / Nee</button>
+                <button id="restart-confirm" class="pill pill-filled">Yes / Ja</button>
             </div>
         </div>
     </div>
@@ -100,30 +106,30 @@
     <!-- Send Popup -->
     <div id="send-overlay" class="overlay" hidden>
         <div class="modal">
-            <h3>Your Name / Je Naam</h3>
+            <p class="modal-title">Your Name / Je Naam</p>
             <input id="send-name" type="text" placeholder="..." autocomplete="off">
-            <div class="modal-actions">
-                <button id="send-cancel" class="btn-secondary">Cancel / Annuleer</button>
-                <button id="send-confirm" class="btn-primary">Send / Versturen</button>
-            </div>
             <p id="send-status" class="modal-status"></p>
+            <div class="modal-actions">
+                <button id="send-cancel" class="pill pill-outline">Cancel / Annuleer</button>
+                <button id="send-confirm" class="pill pill-filled">Send / Versturen</button>
+            </div>
         </div>
     </div>
 
-    <!-- Settings Panel (hidden by default; revealed via secret tap) -->
+    <!-- Settings Panel (revealed via secret tap) -->
     <div id="settings-overlay" class="overlay" hidden>
-        <div class="modal">
-            <h3>Export Settings</h3>
-            <label>Upload Server URL</label>
+        <div class="modal modal-wide">
+            <p class="modal-title">Upload Settings</p>
+            <label class="modal-label">Server URL</label>
             <input id="upload-url" type="text" placeholder="http://192.168.1.100:8080">
-            <div class="row">
-                <button id="settings-test" class="btn-secondary">Test Connection</button>
-                <span id="settings-test-result" class="modal-status"></span>
+            <div class="modal-row">
+                <button id="settings-test" class="pill pill-outline pill-small">Test</button>
+                <span id="settings-test-result" class="modal-status modal-status-inline"></span>
             </div>
             <p class="modal-hint">Run <b>upload-server.py</b> on the target PC, then enter its address here. Leave empty to just download files.</p>
             <div class="modal-actions">
-                <button id="settings-cancel" class="btn-secondary">Cancel</button>
-                <button id="settings-save" class="btn-primary">Save</button>
+                <button id="settings-cancel" class="pill pill-outline">Cancel</button>
+                <button id="settings-save" class="pill pill-filled">Save</button>
             </div>
         </div>
     </div>
@@ -526,12 +532,12 @@
         self.postMessage({id,results},tr);
     };
     </script>
-    <script src="js/voxel-grid.js?v=32"></script>
-    <script src="js/layers.js?v=32"></script>
-    <script src="js/marching-cubes.js?v=32"></script>
-    <script src="js/renderer.js?v=32"></script>
-    <script src="js/drawing.js?v=32"></script>
-    <script src="js/file-io.js?v=32"></script>
-    <script src="js/app.js?v=32"></script>
+    <script src="js/voxel-grid.js?v=33"></script>
+    <script src="js/layers.js?v=33"></script>
+    <script src="js/marching-cubes.js?v=33"></script>
+    <script src="js/renderer.js?v=33"></script>
+    <script src="js/drawing.js?v=33"></script>
+    <script src="js/file-io.js?v=33"></script>
+    <script src="js/app.js?v=33"></script>
 </body>
 </html>

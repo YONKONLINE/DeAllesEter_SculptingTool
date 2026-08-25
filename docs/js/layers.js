@@ -173,6 +173,54 @@ const Layers = (() => {
         if (onChangeCallback) onChangeCallback();
     }
 
+    /**
+     * Reassign z-levels to match the given hex order (index 0 = lowest z / bottom
+     * of the stack). Voxel data moves with each layer. This is the drag-drop
+     * commit path; unlike moveLayer(src, tgt) it takes the full desired order,
+     * which is easier to derive from the DOM after a reorder gesture.
+     */
+    function setLayerOrder(orderedHexesLowToHigh) {
+        const all = getAll();
+        if (orderedHexesLowToHigh.length !== all.length) return;
+        for (const h of orderedHexesLowToHigh) {
+            if (!colorToLayer[h]) return;
+        }
+
+        const S = VoxelGrid.SIZE;
+        const sliceSize = S * S;
+
+        // Backup once, then write each layer to its new slot from the backup —
+        // avoids clobbering data mid-loop when new/old z-slots overlap.
+        const backupFilled = new Uint8Array(VoxelGrid.filled);
+        const backupR = new Float32Array(VoxelGrid.colorR);
+        const backupG = new Float32Array(VoxelGrid.colorG);
+        const backupB = new Float32Array(VoxelGrid.colorB);
+
+        let changed = false;
+        for (let i = 0; i < orderedHexesLowToHigh.length; i++) {
+            const layer = colorToLayer[orderedHexesLowToHigh[i]];
+            const oldZ = layer.z;
+            const newZ = i;
+            if (oldZ === newZ) continue;
+            changed = true;
+            const oldOff = oldZ * sliceSize;
+            const newOff = newZ * sliceSize;
+            VoxelGrid.filled.set(backupFilled.subarray(oldOff, oldOff + sliceSize), newOff);
+            VoxelGrid.colorR.set(backupR.subarray(oldOff, oldOff + sliceSize), newOff);
+            VoxelGrid.colorG.set(backupG.subarray(oldOff, oldOff + sliceSize), newOff);
+            VoxelGrid.colorB.set(backupB.subarray(oldOff, oldOff + sliceSize), newOff);
+            layer.z = newZ;
+        }
+
+        if (changed) {
+            // Voxel data moved between planes — bump the generation so any
+            // cached mesh/canvas keyed to the old layout invalidates.
+            VoxelGrid.bumpGeneration();
+        }
+
+        if (onChangeCallback) onChangeCallback();
+    }
+
     function onChange(cb) {
         onChangeCallback = cb;
     }
@@ -198,6 +246,6 @@ const Layers = (() => {
         getActiveColorRGB, getAll, getLayerByColor,
         ensureLayerForColor, removeLayer,
         hexToRgb, getColorName, isLightColor,
-        moveLayer, onChange, serialize, deserialize,
+        moveLayer, setLayerOrder, onChange, serialize, deserialize,
     };
 })();

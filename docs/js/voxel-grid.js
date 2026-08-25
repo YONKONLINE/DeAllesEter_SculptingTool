@@ -111,12 +111,15 @@ const VoxelGrid = (() => {
 
     init();
 
+    function bumpGeneration() { generation++; }
+
     return {
         SIZE, MAX_LAYERS,
         init, set, erase, get, isFilled, clear,
         serialize, deserialize,
         snapshot, restore,
         inBounds, idx,
+        bumpGeneration,
         get filled() { return filled; },
         get colorR() { return colorR; },
         get colorG() { return colorG; },
