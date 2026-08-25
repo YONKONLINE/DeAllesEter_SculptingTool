@@ -6,13 +6,32 @@
 const FileIO = (() => {
 
     // =================================================================
-    // HARDCODED UPLOAD SERVER URL
-    // Edit this to match the address of the PC running upload-server.py.
-    // Leave empty ('') to download files locally instead of uploading.
-    // Kids cannot see or change this — only via the hidden settings popup
-    // (tap the logo 5 times within 2 seconds to reveal extra tools).
+    // DEFAULT UPLOAD SERVER URL
+    // Auto-derived from the page's own address: when the launcher serves
+    // the app at http://<lan-ip>:8000, uploads go to http://<lan-ip>:8080
+    // on the same machine — no per-device configuration on the iPads.
+    // On a public host (GitHub Pages etc.) or file:// the default is empty
+    // and the user can still override via the hidden settings popup
+    // (tap the logo 5 times within 2 seconds).
+    // localStorage still wins over this default — the hidden settings save
+    // there so the user can force a specific URL if they need to.
     // =================================================================
-    const DEFAULT_UPLOAD_URL = 'http://192.168.1.100:8080';
+    function computeDefaultUploadUrl() {
+        const loc = typeof window !== 'undefined' ? window.location : null;
+        const host = (loc && loc.hostname) || '';
+        const isLan =
+            host === 'localhost' ||
+            host === '127.0.0.1' ||
+            /^10\./.test(host) ||
+            /^192\.168\./.test(host) ||
+            /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+        if (isLan) {
+            const proto = (loc && loc.protocol) || 'http:';
+            return `${proto}//${host}:8080`;
+        }
+        return '';
+    }
+    const DEFAULT_UPLOAD_URL = computeDefaultUploadUrl();
 
 
     function save() {

@@ -1,0 +1,8 @@
+# Local launcher state — per-machine, don't commit.
+docs/launcher-config.txt
+docs/exports/
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+*.swp
