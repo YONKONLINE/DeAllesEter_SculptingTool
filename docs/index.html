@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>De Alleseter</title>
-    <link rel="stylesheet" href="css/style.css?v=28">
+    <link rel="stylesheet" href="css/style.css?v=30">
 </head>
 <body>
     <!-- Top Bar -->
@@ -70,9 +70,11 @@
             <div class="panel-header">Layers / Lagen</div>
             <div id="layer-list"></div>
             <button id="btn-add-layer" class="add-layer-btn" title="Add Layer" style="display:none">+</button>
-            <!-- Empty slot at the bottom aligned with the canvas bottom.
-                 During a layer drag it labels itself and accepts a drop to delete. -->
+            <!-- Empty slot just above the credit — during a layer drag it
+                 labels itself and accepts a drop to delete. Credit is the
+                 last child so its bottom lands on the canvas bottom line. -->
             <div id="layer-delete-bin" aria-hidden="true"></div>
+            <div class="credit-line">Created by / Gemaakt<br>door YONK</div>
         </aside>
 
         <!-- Drawing canvas -->
@@ -84,6 +86,9 @@
         <aside id="right-panel">
             <div class="panel-header">Colours / Kleuren</div>
             <div id="color-palette"></div>
+            <!-- Spacer eats any leftover height so the 3D preview docks at
+                 the very bottom, aligning with the canvas bottom line. -->
+            <div class="right-spacer"></div>
             <div class="panel-header preview-label">3D</div>
             <div id="preview-3d">
                 <canvas id="preview-canvas"></canvas>
@@ -132,10 +137,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Credit sits just below the canvas / delete-bin bottom line, aligned
-         with the layer panel column. -->
-    <div class="credit-line">Created by / Gemaakt<br>door YONK</div>
 
     <!-- Hidden file input -->
     <input type="file" id="file-input" accept=".vormjr" style="display:none">
@@ -535,12 +536,12 @@
         self.postMessage({id,results},tr);
     };
     </script>
-    <script src="js/voxel-grid.js?v=34"></script>
-    <script src="js/layers.js?v=34"></script>
-    <script src="js/marching-cubes.js?v=34"></script>
-    <script src="js/renderer.js?v=34"></script>
-    <script src="js/drawing.js?v=34"></script>
-    <script src="js/file-io.js?v=34"></script>
-    <script src="js/app.js?v=34"></script>
+    <script src="js/voxel-grid.js?v=36"></script>
+    <script src="js/layers.js?v=36"></script>
+    <script src="js/marching-cubes.js?v=36"></script>
+    <script src="js/renderer.js?v=36"></script>
+    <script src="js/drawing.js?v=36"></script>
+    <script src="js/file-io.js?v=36"></script>
+    <script src="js/app.js?v=36"></script>
 </body>
 </html>

@@ -425,13 +425,17 @@
                 });
                 n.style.transition = 'transform var(--pop) var(--bounce)';
             }
-            stepSize = 58;
+            // 44px item + 10px list gap.
+            stepSize = 54;
             targetIndex = originalDomIndex;
 
             // Wake the delete bin at the bottom of the panel \u2014 it labels
-            // itself and becomes a drop target for removal.
+            // itself and becomes a drop target for removal. Also drop the
+            // list's scroll clip so the dragged element can paint on top of
+            // (rather than getting cut off behind) the bin as it moves down.
             if (panel) panel.classList.add('drag-active');
             if (bin) bin.textContent = 'Delete Layer / Laag';
+            list.classList.add('no-clip');
             overBin = false;
         }
 
@@ -521,6 +525,7 @@
             el.classList.remove('dragging');
             el.style.transform = '';
             clearSiblings();
+            list.classList.remove('no-clip');
             if (panel) panel.classList.remove('drag-active');
             if (bin) {
                 bin.classList.remove('hovered');
@@ -528,10 +533,17 @@
             }
 
             if (droppedInBin) {
-                // Delete this layer instead of reordering.
+                // Delete this layer instead of reordering, and give the bin a
+                // brief bounce so the user sees the drop landed.
                 pushUndo();
                 Layers.removeLayer(layer.color);
                 scheduleUpdateMesh();
+                if (bin) {
+                    bin.classList.remove('deleted');
+                    void bin.offsetWidth;
+                    bin.classList.add('deleted');
+                    setTimeout(() => bin.classList.remove('deleted'), 560);
+                }
             } else if (finalIndex !== originalDomIndex) {
                 // Compute new hex order and commit.
                 const items = Array.from(list.children);
@@ -559,6 +571,7 @@
                 el.classList.remove('dragging');
                 el.style.transform = '';
                 clearSiblings();
+                list.classList.remove('no-clip');
                 if (panel) panel.classList.remove('drag-active');
                 if (bin) {
                     bin.classList.remove('hovered');
@@ -597,23 +610,28 @@
             swatch.className = 'color-swatch' + (hex === activeHex ? ' active' : '');
             swatch.style.backgroundColor = hex;
             swatch.title = name;
-            swatch.addEventListener('click', () => {
-                // Create the layer for this color eagerly. Waiting for the
-                // first stroke to spawn it meant the layer list stayed empty
-                // for that color, so the user had no visual confirmation that
-                // the switch had landed and often clicked a second time.
+
+            // Fire on pointerdown, not click. On iPad, a quick tap-then-drag
+            // to the canvas can skip the click event (the pointer left the
+            // swatch before release), leaving activeColor unchanged and
+            // making the user re-tap. pointerdown always fires the instant
+            // the finger touches, guaranteeing the color/layer is set before
+            // the canvas ever sees a pointerdown.
+            const selectColor = (e) => {
+                if (e && e.pointerType === 'mouse' && e.button !== 0) return;
                 const hadLayer = !!Layers.getLayerByColor(hex);
                 if (!hadLayer) pushUndo();
                 Layers.setActiveColor(hex);
                 Layers.ensureLayerForColor(hex);
                 if (currentTool === 'eraser') setTool('pencil');
-                // The re-render replaces this element — bounce the fresh one.
+                // Re-render replaces this DOM node — bounce the fresh one.
                 const fresh = palette.querySelector(`.color-swatch[data-hex="${hex}"]`) || swatch;
                 fresh.classList.remove('bounce');
                 void fresh.offsetWidth;
                 fresh.classList.add('bounce');
                 setTimeout(() => fresh.classList.remove('bounce'), 500);
-            });
+            };
+            swatch.addEventListener('pointerdown', selectColor);
             swatch.dataset.hex = hex;
             palette.appendChild(swatch);
         });
