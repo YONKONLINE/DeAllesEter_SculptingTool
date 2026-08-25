@@ -10,8 +10,22 @@
     const redoStack = [];
     const MAX_UNDO = 20;
 
+    // A snapshot bundles BOTH voxel data AND the layer table — otherwise
+    // undoing an action that created a new layer (e.g. picking a fresh color
+    // and drawing) would restore the voxels but leave the empty layer in place.
+    function takeSnapshot() {
+        return {
+            voxels: VoxelGrid.snapshot(),
+            layers: Layers.snapshot(),
+        };
+    }
+    function applySnapshot(snap) {
+        VoxelGrid.restore(snap.voxels);
+        Layers.restore(snap.layers);
+    }
+
     function pushUndo() {
-        undoStack.push(VoxelGrid.snapshot());
+        undoStack.push(takeSnapshot());
         if (undoStack.length > MAX_UNDO) undoStack.shift();
         // Clear redo when a new action is performed
         redoStack.length = 0;
@@ -19,20 +33,16 @@
 
     function undo() {
         if (undoStack.length === 0) return;
-        // Save current state to redo stack
-        redoStack.push(VoxelGrid.snapshot());
-        const snap = undoStack.pop();
-        VoxelGrid.restore(snap);
+        redoStack.push(takeSnapshot());
+        applySnapshot(undoStack.pop());
         Drawing.render();
         scheduleUpdateMesh();
     }
 
     function redo() {
         if (redoStack.length === 0) return;
-        // Save current state to undo stack
-        undoStack.push(VoxelGrid.snapshot());
-        const snap = redoStack.pop();
-        VoxelGrid.restore(snap);
+        undoStack.push(takeSnapshot());
+        applySnapshot(redoStack.pop());
         Drawing.render();
         scheduleUpdateMesh();
     }
@@ -114,30 +124,34 @@
     }
 
     // ---- Custom drag-to-fill Size / Formaat control ----
+    // Brush pixel size range: 3–10 (previous 1–2 read too thin on iPad).
+    // Fill fraction is written to CSS via transform: scaleX() rather than
+    // width, which was leaving 1-px vertical antialiasing seams on iPad.
+    const BRUSH_MIN = 3, BRUSH_MAX = 10, BRUSH_DEFAULT = 6;
+    let brushValue = BRUSH_DEFAULT;
+    let brushFillEl = null;
+
+    function applyBrushSize(v) {
+        const clamped = Math.round(Math.max(BRUSH_MIN, Math.min(BRUSH_MAX, v)));
+        brushValue = clamped;
+        const frac = (clamped - BRUSH_MIN) / (BRUSH_MAX - BRUSH_MIN);
+        if (brushFillEl) brushFillEl.style.transform = `scaleX(${frac})`;
+        Drawing.setBrushSize(clamped);
+    }
+
+    function resetBrushSize() { applyBrushSize(BRUSH_DEFAULT); }
+
     function initBrushSizeControl() {
         const pill = document.getElementById('brush-size');
-        const fill = document.getElementById('brush-size-fill');
-        const label = document.getElementById('brush-size-label');
-        const MIN = 1, MAX = 10;
-        let value = 6;
-
-        function apply(v) {
-            const clamped = Math.round(Math.max(MIN, Math.min(MAX, v)));
-            if (clamped === value && parseFloat(fill.style.width) === ((clamped - MIN) / (MAX - MIN)) * 100) return;
-            value = clamped;
-            const pct = ((value - MIN) / (MAX - MIN)) * 100;
-            fill.style.width = pct + '%';
-            label.textContent = value;
-            Drawing.setBrushSize(value);
-        }
-        apply(6);
+        brushFillEl = document.getElementById('brush-size-fill');
+        applyBrushSize(BRUSH_DEFAULT);
 
         let pressing = false;
         function fromPointer(e) {
             const rect = pill.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const t = Math.max(0, Math.min(1, x / rect.width));
-            apply(MIN + t * (MAX - MIN));
+            applyBrushSize(BRUSH_MIN + t * (BRUSH_MAX - BRUSH_MIN));
         }
 
         pill.addEventListener('pointerdown', (e) => {
@@ -151,10 +165,9 @@
         pill.addEventListener('pointerup', release);
         pill.addEventListener('pointercancel', release);
 
-        // Keyboard fallback: ← / → tweak by 1
         pill.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); apply(value + 1); }
-            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); apply(value - 1); }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp')   { e.preventDefault(); applyBrushSize(brushValue + 1); }
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); applyBrushSize(brushValue - 1); }
         });
     }
 
@@ -181,6 +194,7 @@
             pushUndo();
             VoxelGrid.clear();
             Layers.init();
+            resetBrushSize();
             renderLayerList();
             renderColorPalette();
             Drawing.render();
@@ -353,23 +367,6 @@
             el.dataset.hex = layer.color;
 
             attachLayerDrag(el, layer, list);
-
-            if (layers.length > 1) {
-                const del = document.createElement('div');
-                del.className = 'layer-delete';
-                del.textContent = '\u00d7';
-                // Prevent the layer's pointerdown handler from starting a drag
-                // when the user hits the little \u00d7 in the corner.
-                del.addEventListener('pointerdown', (e) => { e.stopPropagation(); });
-                del.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    pushUndo();
-                    Layers.removeLayer(layer.color);
-                    scheduleUpdateMesh();
-                });
-                el.appendChild(del);
-            }
-
             list.appendChild(el);
         }
 
@@ -405,6 +402,10 @@
             el.addEventListener('pointercancel', onCancel);
         }
 
+        let overBin = false;
+        const panel = document.getElementById('layer-panel');
+        const bin = document.getElementById('layer-delete-bin');
+
         function beginDrag() {
             dragging = true;
             el.classList.add('dragging');
@@ -419,18 +420,19 @@
                 siblings.push({
                     el: n,
                     natIndex: i,
-                    // Center Y relative to the list, used to compute insertion.
                     center: (r.top - listRect.top) + r.height / 2,
                     height: r.height,
                 });
-                // Give siblings a transition so they slide as the phantom slot moves.
                 n.style.transition = 'transform var(--pop) var(--bounce)';
             }
-            // Uniform step \u2014 use the base layer height (48) + list gap (10).
-            // Active layer being 2x taller doesn't matter for insertion feel;
-            // the .dragging class collapses the dragged element back to 48.
             stepSize = 58;
             targetIndex = originalDomIndex;
+
+            // Wake the delete bin at the bottom of the panel \u2014 it labels
+            // itself and becomes a drop target for removal.
+            if (panel) panel.classList.add('drag-active');
+            if (bin) bin.textContent = 'Delete Layer / Laag';
+            overBin = false;
         }
 
         function onMove(e) {
@@ -443,9 +445,23 @@
             // Move dragged element with the finger.
             el.style.transform = `translateY(${dy}px) scale(1.04)`;
 
+            // Delete-bin hit test \u2014 if the pointer is over the bin, hovering
+            // reorder logic pauses and we highlight the bin instead.
+            if (bin) {
+                const br = bin.getBoundingClientRect();
+                const inside =
+                    e.clientX >= br.left && e.clientX <= br.right &&
+                    e.clientY >= br.top && e.clientY <= br.bottom;
+                if (inside !== overBin) {
+                    overBin = inside;
+                    bin.classList.toggle('hovered', inside);
+                }
+                if (overBin) return;
+            }
+
             // Compute insertion index by finding which sibling center the
-            // pointer is currently above (accounting for siblings' *natural*
-            // untranslated positions \u2014 their shifts are visual only).
+            // pointer is currently above (siblings' natural untranslated
+            // positions \u2014 their visual shifts don't move the anchors).
             const listRect = list.getBoundingClientRect();
             const pointerY = e.clientY - listRect.top;
             let newIndex = siblings.length; // past the last slot = end
@@ -501,11 +517,22 @@
             }
 
             const finalIndex = targetIndex;
+            const droppedInBin = overBin;
             el.classList.remove('dragging');
             el.style.transform = '';
             clearSiblings();
+            if (panel) panel.classList.remove('drag-active');
+            if (bin) {
+                bin.classList.remove('hovered');
+                bin.textContent = '';
+            }
 
-            if (finalIndex !== originalDomIndex) {
+            if (droppedInBin) {
+                // Delete this layer instead of reordering.
+                pushUndo();
+                Layers.removeLayer(layer.color);
+                scheduleUpdateMesh();
+            } else if (finalIndex !== originalDomIndex) {
                 // Compute new hex order and commit.
                 const items = Array.from(list.children);
                 items.splice(items.indexOf(el), 1);
@@ -532,6 +559,11 @@
                 el.classList.remove('dragging');
                 el.style.transform = '';
                 clearSiblings();
+                if (panel) panel.classList.remove('drag-active');
+                if (bin) {
+                    bin.classList.remove('hovered');
+                    bin.textContent = '';
+                }
                 dragging = false;
             }
         }
@@ -566,10 +598,16 @@
             swatch.style.backgroundColor = hex;
             swatch.title = name;
             swatch.addEventListener('click', () => {
-                // Selection first — the re-render replaces this element, so the
-                // fresh one is what we want the bounce animation to land on.
+                // Create the layer for this color eagerly. Waiting for the
+                // first stroke to spawn it meant the layer list stayed empty
+                // for that color, so the user had no visual confirmation that
+                // the switch had landed and often clicked a second time.
+                const hadLayer = !!Layers.getLayerByColor(hex);
+                if (!hadLayer) pushUndo();
                 Layers.setActiveColor(hex);
+                Layers.ensureLayerForColor(hex);
                 if (currentTool === 'eraser') setTool('pencil');
+                // The re-render replaces this element — bounce the fresh one.
                 const fresh = palette.querySelector(`.color-swatch[data-hex="${hex}"]`) || swatch;
                 fresh.classList.remove('bounce');
                 void fresh.offsetWidth;

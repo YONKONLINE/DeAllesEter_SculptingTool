@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>De Alleseter</title>
-    <link rel="stylesheet" href="css/style.css?v=27">
+    <link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
     <!-- Top Bar -->
@@ -34,7 +34,6 @@
                 <div id="brush-size-fill" class="size-pill-fill"></div>
                 <span class="size-pill-label">Size / Formaat</span>
             </div>
-            <span id="brush-size-label" class="size-value">6</span>
         </div>
 
         <div class="top-cluster top-center">
@@ -71,6 +70,9 @@
             <div class="panel-header">Layers / Lagen</div>
             <div id="layer-list"></div>
             <button id="btn-add-layer" class="add-layer-btn" title="Add Layer" style="display:none">+</button>
+            <!-- Empty slot at the bottom aligned with the canvas bottom.
+                 During a layer drag it labels itself and accepts a drop to delete. -->
+            <div id="layer-delete-bin" aria-hidden="true"></div>
         </aside>
 
         <!-- Drawing canvas -->
@@ -88,9 +90,6 @@
             </div>
         </aside>
     </main>
-
-    <!-- Credit -->
-    <div class="credit-line">Created by / Gemaakt<br>door YONK</div>
 
     <!-- Restart Confirm Popup -->
     <div id="restart-overlay" class="overlay" hidden>
@@ -133,6 +132,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Credit sits just below the canvas / delete-bin bottom line, aligned
+         with the layer panel column. -->
+    <div class="credit-line">Created by / Gemaakt<br>door YONK</div>
 
     <!-- Hidden file input -->
     <input type="file" id="file-input" accept=".vormjr" style="display:none">
@@ -532,12 +535,12 @@
         self.postMessage({id,results},tr);
     };
     </script>
-    <script src="js/voxel-grid.js?v=33"></script>
-    <script src="js/layers.js?v=33"></script>
-    <script src="js/marching-cubes.js?v=33"></script>
-    <script src="js/renderer.js?v=33"></script>
-    <script src="js/drawing.js?v=33"></script>
-    <script src="js/file-io.js?v=33"></script>
-    <script src="js/app.js?v=33"></script>
+    <script src="js/voxel-grid.js?v=34"></script>
+    <script src="js/layers.js?v=34"></script>
+    <script src="js/marching-cubes.js?v=34"></script>
+    <script src="js/renderer.js?v=34"></script>
+    <script src="js/drawing.js?v=34"></script>
+    <script src="js/file-io.js?v=34"></script>
+    <script src="js/app.js?v=34"></script>
 </body>
 </html>

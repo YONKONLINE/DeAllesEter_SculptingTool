@@ -240,12 +240,40 @@ const Layers = (() => {
         if (onChangeCallback) onChangeCallback();
     }
 
+    /**
+     * Undo snapshot: a *deep* copy of the layer state so pushing a snapshot to
+     * the undo stack and then mutating colorToLayer (add/remove/reorder) does
+     * not corrupt the saved entry.
+     */
+    function snapshot() {
+        const cloneMap = {};
+        for (const hex in colorToLayer) {
+            const l = colorToLayer[hex];
+            cloneMap[hex] = { color: l.color, name: l.name, z: l.z };
+        }
+        return { colorToLayer: cloneMap, nextZ, activeColorHex };
+    }
+
+    function restore(snap) {
+        const cloneMap = {};
+        for (const hex in snap.colorToLayer) {
+            const l = snap.colorToLayer[hex];
+            cloneMap[hex] = { color: l.color, name: l.name, z: l.z };
+        }
+        colorToLayer = cloneMap;
+        nextZ = snap.nextZ;
+        activeColorHex = snap.activeColorHex;
+        if (onChangeCallback) onChangeCallback();
+    }
+
     return {
         PALETTE,
         init, setActiveColor, getActive, getOrCreateActive, getActiveColorHex,
         getActiveColorRGB, getAll, getLayerByColor,
         ensureLayerForColor, removeLayer,
         hexToRgb, getColorName, isLightColor,
-        moveLayer, setLayerOrder, onChange, serialize, deserialize,
+        moveLayer, setLayerOrder, onChange,
+        snapshot, restore,
+        serialize, deserialize,
     };
 })();

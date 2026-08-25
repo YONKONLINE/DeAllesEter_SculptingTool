@@ -14,7 +14,14 @@ const Drawing = (() => {
 
     function init(canvasEl) {
         canvas = canvasEl;
-        ctx = canvas.getContext('2d');
+        // Pin the 2D context to sRGB so ImageData bytes map to the same
+        // colors as CSS on iPad Safari (defaults there can shift toward the
+        // display's wider gamut, which was making red render as orange).
+        try {
+            ctx = canvas.getContext('2d', { colorSpace: 'srgb' });
+        } catch (_) {
+            ctx = canvas.getContext('2d');
+        }
 
         canvas.addEventListener('pointerdown', handleStart, { passive: false });
         canvas.addEventListener('pointermove', handleMove, { passive: false });
