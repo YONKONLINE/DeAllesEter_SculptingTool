@@ -49,6 +49,8 @@ const Drawing = (() => {
         render();
     }
 
+    let onFillComplete = null;
+
     function setTool(t) { tool = t; }
     function setBrushSize(s) { brushSize = Math.max(1, Math.min(10, s)); }
 
@@ -58,8 +60,12 @@ const Drawing = (() => {
 
         if (tool === 'fill') {
             if (onStrokeStart) onStrokeStart();
-            fillAt(e);
+            const didFill = fillAt(e);
             if (onStrokeEnd) onStrokeEnd();
+            // The bucket is a one-shot tool. Only hand back to the pen when it
+            // actually poured — a tap on an already-coloured area did nothing,
+            // so leave the bucket selected and let them try again.
+            if (didFill && onFillComplete) onFillComplete();
             return;
         }
 
@@ -86,6 +92,7 @@ const Drawing = (() => {
 
     /**
      * Flood fill from the clicked cell on the active layer.
+     * Returns true if anything was actually painted.
      */
     function fillAt(e) {
         const rect = canvas.getBoundingClientRect();
@@ -95,10 +102,10 @@ const Drawing = (() => {
         const startY = Math.floor(py / cellSize);
         const S = VoxelGrid.SIZE;
 
-        if (startX < 0 || startX >= S || startY < 0 || startY >= S) return;
+        if (startX < 0 || startX >= S || startY < 0 || startY >= S) return false;
 
         const layer = Layers.getOrCreateActive();
-        if (!layer) return;
+        if (!layer) return false;
         const z = layer.z;
         const rgb = Layers.getActiveColorRGB();
 
@@ -106,7 +113,7 @@ const Drawing = (() => {
         const targetFilled = VoxelGrid.isFilled(startX, startY, z);
 
         // Don't fill if clicking on an already-filled cell with the same color
-        if (targetFilled) return;
+        if (targetFilled) return false;
 
         // BFS flood fill on empty cells
         const visited = new Uint8Array(S * S);
@@ -129,6 +136,7 @@ const Drawing = (() => {
         }
 
         render();
+        return true;
     }
 
     // Bresenham line between two grid points for smooth strokes
@@ -336,5 +344,6 @@ const Drawing = (() => {
         get tool() { return tool; },
         set onStrokeEnd(cb) { onStrokeEnd = cb; },
         set onStrokeStart(cb) { onStrokeStart = cb; },
+        set onFillComplete(cb) { onFillComplete = cb; },
     };
 })();

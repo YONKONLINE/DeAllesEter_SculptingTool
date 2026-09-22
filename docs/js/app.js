@@ -88,6 +88,11 @@
         btnPencil.addEventListener('click', () => { bounce(btnPencil); setTool('pencil'); });
         btnEraser.addEventListener('click', () => { bounce(btnEraser); setTool('eraser'); });
         btnFill.addEventListener('click',   () => { bounce(btnFill);   setTool('fill'); });
+
+        // Bucket is one-shot: once it has poured, hand control straight back to the
+        // pen so the next touch draws instead of flooding the drawing again. The
+        // bounce is what tells a kid the tool moved on without them pressing anything.
+        Drawing.onFillComplete = () => { setTool('pencil'); bounce(btnPencil); };
         btnUndo.addEventListener('click',   () => { bounce(btnUndo);   undo(); });
         btnRedo.addEventListener('click',   () => { bounce(btnRedo);   redo(); });
 
@@ -123,11 +128,10 @@
         initSettingsPanel();
     }
 
-    // ---- Custom drag-to-fill Size / Formaat control ----
-    // Brush pixel size range: 3–10 (previous 1–2 read too thin on iPad).
-    // Fill fraction is written to CSS via transform: scaleX() rather than
-    // width, which was leaving 1-px vertical antialiasing seams on iPad.
-    const BRUSH_MIN = 3, BRUSH_MAX = 10, BRUSH_DEFAULT = 6;
+    // Brush size = drag to fill the pill. Fill fraction is written to CSS via
+    // transform: scaleX() (not width) so iPad Safari doesn't leave 1-px
+    // vertical seams while dragging.
+    const BRUSH_MIN = 3, BRUSH_MAX = 10, BRUSH_DEFAULT = 5;
     let brushValue = BRUSH_DEFAULT;
     let brushFillEl = null;
 
@@ -138,7 +142,6 @@
         if (brushFillEl) brushFillEl.style.transform = `scaleX(${frac})`;
         Drawing.setBrushSize(clamped);
     }
-
     function resetBrushSize() { applyBrushSize(BRUSH_DEFAULT); }
 
     function initBrushSizeControl() {
@@ -171,6 +174,21 @@
         });
     }
 
+    // Shared "wipe and start fresh" — pushes an undo snapshot, clears voxels,
+    // reinitializes layers/brush, and repaints the UI. Called from Restart
+    // confirm and also from a successful Feed so the next kid sees a blank
+    // canvas.
+    function clearCanvas() {
+        pushUndo();
+        VoxelGrid.clear();
+        Layers.init();
+        resetBrushSize();
+        renderLayerList();
+        renderColorPalette();
+        Drawing.render();
+        Renderer.updateMesh();
+    }
+
     // ---- Restart (clear everything) ----
     function initRestartButton() {
         const btnRestart = document.getElementById('btn-restart');
@@ -191,16 +209,94 @@
             if (e.target === overlay) closeRestart();
         });
         confirm.addEventListener('click', () => {
-            pushUndo();
-            VoxelGrid.clear();
-            Layers.init();
-            resetBrushSize();
-            renderLayerList();
-            renderColorPalette();
-            Drawing.render();
-            Renderer.updateMesh();
+            clearCanvas();
             closeRestart();
         });
+    }
+
+    // ---- Confetti burst (fires after a successful Feed) ----
+    // Full-screen 2D canvas that self-removes when every particle has
+    // finished its life. Colors are taken from Layers.PALETTE so the burst
+    // always matches whatever palette the app is currently using.
+    function fireConfetti() {
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText =
+            'position:fixed;inset:0;pointer-events:none;z-index:9999;';
+        // devicePixelRatio backing so shapes look crisp on iPad Retina.
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const colors = (Layers.PALETTE || []).map(p => p.hex);
+        if (colors.length === 0) colors.push('#ED1C24', '#FFF200', '#22B14C');
+
+        const N = 90;
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        const particles = [];
+        for (let i = 0; i < N; i++) {
+            // Full 360° spread, upward-biased so most go up-and-out.
+            const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.6;
+            const speed = 280 + Math.random() * 520;
+            particles.push({
+                x: cx + (Math.random() - 0.5) * 40,
+                y: cy + (Math.random() - 0.5) * 40,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: 6 + Math.random() * 9,
+                rot: Math.random() * Math.PI * 2,
+                vrot: (Math.random() - 0.5) * 12,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 0,
+                maxLife: 1.6 + Math.random() * 0.9,
+                shape: Math.random() < 0.5 ? 'rect' : 'circle',
+            });
+        }
+
+        const GRAVITY = 1100;
+        let last = performance.now();
+        function frame(now) {
+            const dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = 0;
+            for (const p of particles) {
+                if (p.life >= p.maxLife) continue;
+                alive++;
+                p.life += dt;
+                p.vy += GRAVITY * dt;
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.rot += p.vrot * dt;
+                // Fade in for a tick, then out over the last third of the life.
+                const t = p.life / p.maxLife;
+                const alpha = t < 0.7 ? 1 : Math.max(0, 1 - (t - 0.7) / 0.3);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.55);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+            if (alive > 0) {
+                requestAnimationFrame(frame);
+            } else {
+                canvas.remove();
+            }
+        }
+        requestAnimationFrame(frame);
     }
 
     // ---- Send (main button kids use) ----
@@ -212,10 +308,16 @@
         const sendCancel = document.getElementById('send-cancel');
         const sendStatus = document.getElementById('send-status');
 
+        function refreshConfirmEnabled() {
+            // Non-whitespace character required to send. Keeps kids from
+            // firing an empty "Artist" upload just by mashing enter.
+            sendConfirm.disabled = sendNameInput.value.trim().length === 0;
+        }
+
         function openSend() {
             sendNameInput.value = '';
             sendStatus.textContent = '';
-            sendConfirm.disabled = false;
+            refreshConfirmEnabled();
             sendOverlay.hidden = false;
             setTimeout(() => sendNameInput.focus(), 50);
         }
@@ -230,24 +332,32 @@
             if (e.target === sendOverlay) closeSend();
         });
 
+        sendNameInput.addEventListener('input', refreshConfirmEnabled);
         sendNameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendConfirm.click();
+            if (e.key === 'Enter' && !sendConfirm.disabled) sendConfirm.click();
             if (e.key === 'Escape') closeSend();
         });
 
         sendConfirm.addEventListener('click', async () => {
-            const name = sendNameInput.value.trim() || 'Artist';
+            if (sendConfirm.disabled) return;
+            const name = sendNameInput.value.trim();
+            if (!name) return;
             FileIO.setArtistName(name);
             sendConfirm.disabled = true;
-            sendStatus.textContent = 'Sending... / Versturen...';
+            sendStatus.textContent = 'Feeding... / Voeren...';
             // exportOBJ awaits the worker internally, so no manual delay needed.
             Renderer.updateMesh();
             const result = await FileIO.exportOBJ();
             sendStatus.textContent = result.message;
             if (result.ok) {
-                setTimeout(closeSend, 1200);
+                setTimeout(() => {
+                    closeSend();
+                    fireConfetti();
+                    // Clear the canvas so the next drawer starts fresh.
+                    clearCanvas();
+                }, 1200);
             } else {
-                sendConfirm.disabled = false;
+                refreshConfirmEnabled();
             }
         });
     }

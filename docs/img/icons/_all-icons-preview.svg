@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+<rect width="100%" height="100%" fill="#faf7f2"/>
+<g transform="translate(36,30) scale(2)" fill="#2b2b2b"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/></g>
+<text x="60.0" y="100" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">undo</text>
+<g transform="translate(156,30) scale(2)" fill="#2b2b2b"><path d="M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z" fill="currentColor"/></g>
+<text x="180.0" y="100" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">redo</text>
+<g transform="translate(276,30) scale(2)" fill="#2b2b2b"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/></g>
+<text x="300.0" y="100" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">pencil-draw</text>
+<g transform="translate(36,150) scale(2)" fill="#2b2b2b"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.01 4.01 0 01-5.66 0L2.81 17c-.78-.78-.78-2.05 0-2.83l10.6-10.61a2.01 2.01 0 012.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z" fill="currentColor"/></g>
+<text x="60.0" y="220" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">eraser</text>
+<g transform="translate(156,150) scale(2)" fill="#2b2b2b"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 000 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z" fill="currentColor"/></g>
+<text x="180.0" y="220" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">fill</text>
+<g transform="translate(276,150) scale(2)" fill="#2b2b2b"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z" fill="currentColor"/></g>
+<text x="300.0" y="220" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">save</text>
+<g transform="translate(36,270) scale(2)" fill="#2b2b2b"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm0 12H4V8h16v10z" fill="currentColor"/></g>
+<text x="60.0" y="340" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">open-folder</text>
+<g transform="translate(156,270) scale(2)" fill="#2b2b2b"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></g>
+<text x="180.0" y="340" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">export-download</text>
+<g transform="translate(276,270) scale(2)" fill="#2b2b2b"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z" fill="currentColor"/></g>
+<text x="300.0" y="340" font-family="system-ui,sans-serif" font-size="11" fill="#666" text-anchor="middle">settings</text>
+</svg>

@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>De Alleseter</title>
-    <link rel="stylesheet" href="css/style.css?v=30">
+    <link rel="stylesheet" href="css/style.css?v=31">
 </head>
 <body>
     <!-- Top Bar -->
@@ -42,7 +42,7 @@
 
         <div class="top-cluster top-right">
             <button id="btn-restart" class="pill pill-outline" title="Restart / Opnieuw beginnen">Restart / Opnieuw beginnen</button>
-            <button id="btn-send" class="pill pill-filled" title="Send / Versturen">Send / Versturen</button>
+            <button id="btn-send" class="pill pill-filled" title="Feed / Voeren">Feed / Voeren</button>
         </div>
     </header>
 
@@ -99,7 +99,7 @@
     <!-- Restart Confirm Popup -->
     <div id="restart-overlay" class="overlay" hidden>
         <div class="modal">
-            <p class="modal-title">This delete everything / Dit wist alles.</p>
+            <p class="modal-title">This deletes everything / Dit wist alles.</p>
             <div class="modal-actions">
                 <button id="restart-cancel" class="pill pill-outline">No / Nee</button>
                 <button id="restart-confirm" class="pill pill-filled">Yes / Ja</button>
@@ -111,11 +111,11 @@
     <div id="send-overlay" class="overlay" hidden>
         <div class="modal">
             <p class="modal-title">Your Name / Je Naam</p>
-            <input id="send-name" type="text" placeholder="..." autocomplete="off">
+            <input id="send-name" type="text" placeholder="..." autocomplete="off" maxlength="30">
             <p id="send-status" class="modal-status"></p>
             <div class="modal-actions">
                 <button id="send-cancel" class="pill pill-outline">Cancel / Annuleer</button>
-                <button id="send-confirm" class="pill pill-filled">Send / Versturen</button>
+                <button id="send-confirm" class="pill pill-filled">Feed / Voeren</button>
             </div>
         </div>
     </div>
@@ -536,12 +536,12 @@
         self.postMessage({id,results},tr);
     };
     </script>
-    <script src="js/voxel-grid.js?v=37"></script>
-    <script src="js/layers.js?v=37"></script>
-    <script src="js/marching-cubes.js?v=37"></script>
-    <script src="js/renderer.js?v=37"></script>
-    <script src="js/drawing.js?v=37"></script>
-    <script src="js/file-io.js?v=37"></script>
-    <script src="js/app.js?v=37"></script>
+    <script src="js/voxel-grid.js?v=42"></script>
+    <script src="js/layers.js?v=42"></script>
+    <script src="js/marching-cubes.js?v=42"></script>
+    <script src="js/renderer.js?v=42"></script>
+    <script src="js/drawing.js?v=42"></script>
+    <script src="js/file-io.js?v=42"></script>
+    <script src="js/app.js?v=42"></script>
 </body>
 </html>

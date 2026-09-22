@@ -46,6 +46,9 @@ except Exception:
 
 APP_PORT = 8000
 UPLOAD_PORT = 8080
+# Sent in the health-check response so a new launch can recognise an older copy
+# of itself on the port (and only ever shut down its own kind).
+SERVER_ID = "De Alleseter Upload"
 SCRIPT_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = SCRIPT_DIR / "launcher-config.txt"
 
@@ -129,25 +132,35 @@ def get_export_folder(cli_arg=None):
 # ---------- Local IPs (for printing the connect URL) ----------
 
 def get_local_ips():
-    ips = set()
-    # Quickest way to find the "outbound" interface's IP — talks to no one.
+    """Returns (best, others).
+
+    'best' is the address on the interface that actually reaches the network, so
+    it's the one the iPads can see. The rest are usually VPN or virtual adapters
+    (Hyper-V, Dropbox, VirtualBox) that look plausible but go nowhere — they're
+    listed as fallbacks rather than presented as equal choices.
+    """
+    best = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ips.add(s.getsockname()[0])
+        s.connect(("8.8.8.8", 80))  # No packets are sent; this just picks a route.
+        best = s.getsockname()[0]
         s.close()
     except Exception:
         pass
-    # Also enumerate hostname → all IPv4 addresses, for setups with multiple NICs.
+
+    others = set()
     try:
-        hostname = socket.gethostname()
-        for info in socket.getaddrinfo(hostname, None, socket.AF_INET):
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
             ip = info[4][0]
-            if not ip.startswith("127."):
-                ips.add(ip)
+            if not ip.startswith("127.") and ip != best:
+                others.add(ip)
     except Exception:
         pass
-    return sorted(ips)
+
+    if not best:
+        ordered = sorted(others)
+        return (ordered[0] if ordered else "127.0.0.1"), ordered[1:]
+    return best, sorted(others)
 
 
 # ---------- Upload receiver (port 8080) ----------
@@ -192,7 +205,8 @@ class UploadHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         # Health-check endpoint used by the app's "Test Connection" button.
-        self._json(200, {"ok": True, "server": "De Alleseter Upload"})
+        # The pid lets a fresh launch identify and close an older instance.
+        self._json(200, {"ok": True, "server": SERVER_ID, "pid": os.getpid()})
 
     def _json(self, code, payload):
         self.send_response(code)
@@ -212,20 +226,45 @@ class AppHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(SCRIPT_DIR), **kwargs)
 
+    def end_headers(self):
+        # Never let an iPad hold on to old code. SimpleHTTPRequestHandler sends only
+        # Last-Modified, and with no Cache-Control iOS Safari applies its own guess at
+        # how long a file stays fresh — which can be hours. Fix a bug mid-event and the
+        # tablets would quietly keep running yesterday's JavaScript.
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
     def log_message(self, fmt, *args):
         pass
 
 
-class ReusableThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    allow_reuse_address = True
+class ExclusiveThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    # NOT reusable, deliberately. With SO_REUSEADDR set, Windows lets a second
+    # process bind a port that is already being listened on — the bind succeeds,
+    # both servers stay up, and which one answers any given request is arbitrary.
+    # That is how a stale launcher can silently swallow uploads while everything
+    # still looks healthy. Binding exclusively turns that into a clean error.
+    allow_reuse_address = False
     daemon_threads = True
+
+    def server_bind(self):
+        if sys.platform == "win32":
+            # SO_EXCLUSIVEADDRUSE is the Windows-side half of this: it stops anyone
+            # else stealing the port even if they do ask for SO_REUSEADDR.
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, getattr(socket, "SO_EXCLUSIVEADDRUSE", -5), 1)
+            except OSError:
+                pass
+        super().server_bind()
 
 
 _running_servers = []
 
 def start_server(port, handler, name):
     try:
-        srv = ReusableThreadedTCPServer(("0.0.0.0", port), handler)
+        srv = ExclusiveThreadedTCPServer(("0.0.0.0", port), handler)
     except OSError as e:
         print(f"! Could not bind port {port} for {name}: {e}")
         return None
@@ -298,6 +337,68 @@ def install_shutdown_hooks():
             print(f"(Note: could not install Windows close-handler: {e})")
 
 
+# ---------- Single instance ----------
+
+def port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.4)
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def identify_holder():
+    """Ask whatever is sitting on the upload port who it is.
+
+    Returns the pid if it's an older copy of this launcher, 0 if something we
+    don't recognise is there, or None if the port is free. Self-verifying: we
+    only ever close a process that answers with our own server id.
+    """
+    if not port_in_use(UPLOAD_PORT) and not port_in_use(APP_PORT):
+        return None
+    try:
+        import urllib.request
+        with urllib.request.urlopen(f"http://127.0.0.1:{UPLOAD_PORT}/", timeout=2) as r:
+            data = json.loads(r.read().decode())
+        if data.get("server") == SERVER_ID:
+            return int(data.get("pid", 0))
+    except Exception:
+        pass
+    return 0
+
+
+def stop_previous_instance():
+    """Close an older launcher still holding the ports. Returns True if we're clear."""
+    holder = identify_holder()
+    if holder is None:
+        return True
+
+    if not holder:
+        print()
+        print("  ! Ports 8000/8080 are held by something that isn't this launcher.")
+        print("    Find it with:  netstat -ano | findstr \":8000 :8080\"")
+        print("    Then close that program and start again.")
+        return False
+
+    if holder == os.getpid():
+        return True
+
+    print(f"  An older launcher is still running (PID {holder}). Closing it...")
+    try:
+        import signal as _signal
+        os.kill(holder, _signal.SIGTERM)
+    except Exception as e:
+        print(f"  ! Could not close it: {e}")
+        return False
+
+    import time as _time
+    for _ in range(24):
+        _time.sleep(0.25)
+        if not port_in_use(APP_PORT) and not port_in_use(UPLOAD_PORT):
+            print("  Old launcher closed.")
+            return True
+    print("  ! The old launcher did not let go of the ports.")
+    return False
+
+
 # ---------- CLI arg helper ----------
 
 def parse_cli_folder(argv):
@@ -323,32 +424,43 @@ def main():
     os.makedirs(export_folder, exist_ok=True)
     UploadHandler.output_folder = export_folder
 
-    ips = get_local_ips() or ["127.0.0.1"]
+    best_ip, other_ips = get_local_ips()
 
     install_shutdown_hooks()
+
+    if not stop_previous_instance():
+        print()
+        input("Press Enter to exit...")
+        return
 
     app_srv = start_server(APP_PORT, AppHandler, "app server")
     up_srv = start_server(UPLOAD_PORT, UploadHandler, "upload receiver")
     if not app_srv or not up_srv:
         print()
-        print("Startup failed — one of the ports is already in use.")
-        print("Close whatever is using port 8000 or 8080 and try again.")
+        print("Startup failed — port 8000 or 8080 is already in use.")
+        print("Close whatever is using it and start again.")
         input("Press Enter to exit...")
         shutdown_all()
         return
 
     print()
-    print("  De Alleseter — running")
+    print("  De Alleseter - running")
     print("  ======================")
-    print(f"  Exports save to: {export_folder}")
     print()
-    print("  Open on any iPad on the same Wi-Fi:")
-    for ip in ips:
-        print(f"    http://{ip}:{APP_PORT}")
+    print("  On the iPads, open:")
+    print()
+    print(f"      http://{best_ip}:{APP_PORT}")
+    print()
+    if other_ips:
+        print("  (If that one doesn't load, try: "
+              + ", ".join(f"http://{ip}:{APP_PORT}" for ip in other_ips) + ")")
+        print()
+    print(f"  Drawings save to: {export_folder}")
     print()
     print("  Tips:")
     print("    - First time on a new laptop? Run allow-firewall.bat once.")
-    print("    - Close this window (X) or press Ctrl+C to fully stop the servers.")
+    print("    - Close this window (X) or press Ctrl+C to stop. Both ports are")
+    print("      released on the way out, and a fresh start closes any leftovers.")
     print()
 
     import time

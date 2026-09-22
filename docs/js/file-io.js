@@ -224,7 +224,7 @@ const FileIO = (() => {
             clearTimeout(timeoutId);
 
             if (response.ok) {
-                return { ok: true, message: 'Sent! / Verstuurd!' };
+                return { ok: true, message: 'Fed! / Gevoerd!' };
             }
             return { ok: false, message: 'Upload failed (HTTP ' + response.status + ').' };
         } catch (e) {

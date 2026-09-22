@@ -142,7 +142,7 @@ html, body {
 .size-pill {
     position: relative;
     height: 52px;
-    padding: 0 26px;
+    padding: 0 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,7 +152,9 @@ html, body {
     overflow: hidden;
     touch-action: none;
     cursor: ew-resize;
-    min-width: 210px;
+    /* Compact — just enough to fit the "Size / Formaat" label plus a little
+       drag room. Keeps the pill from crowding the logo in the center. */
+    min-width: 150px;
 }
 /* No hover / drag pop — user requested it stay put while sizing. */
 
@@ -639,14 +641,14 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 @media (max-width: 1300px) {
     #main-content { grid-template-columns: 148px 1fr 184px; gap: 18px; }
     .tool-btn { width: 48px; height: 48px; }
-    .size-pill { min-width: 180px; height: 48px; padding: 0 22px; }
+    .size-pill { min-width: 134px; height: 48px; padding: 0 16px; }
     .pill { height: 48px; padding: 0 16px; font-size: 13px; }
     .logo-img { height: 40px; }
     #top-bar { padding: 12px var(--pad-page) 4px; }
 }
 @media (max-width: 1200px) {
     .logo-img { height: 32px; }
-    .size-pill { min-width: 160px; padding: 0 18px; }
+    .size-pill { min-width: 124px; padding: 0 14px; }
     .pill { padding: 0 14px; font-size: 12.5px; }
     .tool-btn { width: 44px; height: 44px; }
 }
